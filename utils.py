@@ -8,6 +8,7 @@ from nltk import ngrams
 def add_one(x:np.array):
   return (x+1)/(x+1).sum()
 
+# TODO: SentLex method로 바꾸기 (self.labels 사용하기)
 def smooth(row:pd.Series, func=add_one):
   counts = row[['COMP', 'NEG', 'NEUT', 'None', 'POS']].astype('int')
   return func(counts)
@@ -27,6 +28,7 @@ def softmax(x:np.array):
   return np.exp(x) / sum(np.exp(x))
 
 class Corpus:
+  # TODO: HuggingFace Datasets 라이브러리 추가하기
   def __init__(self, filepath='./data/example.csv'):
     self.df = pd.read_csv(filepath, names=('text', 'label'))
     self.labels = self.df['label'].unique().tolist()
@@ -37,7 +39,8 @@ class Corpus:
 class SentLex:
   def __init__(self, filepath=None, ngrams=[1,2,3]):
     self.ngrams = ngrams
-    self.labels = ['COMP', 'NEG', 'NEUT', 'None', 'POS']
+    # TODO: subclass로 PolarityLex 만들기
+    self.labels = ['COMP', 'NEG', 'NEUT', 'None', 'POS'] 
 
     if filepath:
       df = pd.read_csv(filepath)
