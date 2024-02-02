@@ -70,6 +70,7 @@ class SentLex:
 
   def set_lexicon(self, min_freq=0, threshold=0.0):
     df = self.lexicon
+    # TODO: frequency 대신 tf-idf
     self.lexicon = df[(df['freq'] >= min_freq) & (df['max.prop'] > threshold)]
     self.min_freq = min_freq
     self.threshold = 0.0
