@@ -4,7 +4,7 @@ import re
 from .utils import *
 
 class SentimentLexicon:
-  def __init__(self, filepath=None, ngrams=[1,2,3]):
+  def __init__(self, filepath=None, ngrams=[1]):
     self.ngrams = ngrams
 
     if filepath:
@@ -13,7 +13,7 @@ class SentimentLexicon:
 
       # relative frequency -> absolute frequency
       for label in self.labels:
-        df[label] = (df[label] * df['freq']).astype('int')
+        df[label] = (df[label] * df['freq']).apply(round)
       
       df = df.sort_values('max.prop', ascending=False)
       df['ngram'] = df['entry'].str.count(' ') + 1
@@ -27,6 +27,19 @@ class SentimentLexicon:
       
     self.original_lexicon = df
     self.lexicon = self.original_lexicon.copy()
+  
+  def __repr__(self):
+    name = type(self).__name__
+    return f'{name}(ngrams={self.ngrams}, min_freq={self.min_freq}, threshold={self.threshold})'
+  
+  def __eq__(self, other):
+    self.lexicon == other.lexicon
+  
+  def __ne__(self, other):
+    self.lexicon != other.lexicon
+  
+  def __add__(self, other):
+    raise NotImplementedError
 
   def get_original_lexicon(self):
     return self.original_lexicon
@@ -36,10 +49,13 @@ class SentimentLexicon:
     # TODO: frequency 대신 tf-idf
     self.lexicon = df[(df['freq'] >= min_freq) & (df['max.prop'] > threshold)]
     self.min_freq = min_freq
-    self.threshold = 0.0
+    self.threshold = threshold
   
   def get_lexicon(self):
     return self.lexicon
+
+  def get_size(self):
+    return len(self.lexicon)
   
   def get_labels(self):
     return self.labels

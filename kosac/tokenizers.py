@@ -36,7 +36,7 @@ class OktTokenizer(PosTokenizer):
   tagger_type = Okt
 
 # HuggingFace Transformers
-class HuggingTokenizer(Tokenizer, AutoTokenizer):
+class HuggingFaceTokenizer(Tokenizer, AutoTokenizer):
   def __init__(self, model_name='snunlp/KR-ELECTRA-discriminator'):
     tokenizer = self.from_pretrained(pretrained_model_name_or_path=model_name)
     self.tagger_type = type(tokenizer)
