@@ -104,7 +104,7 @@ class SentimentLexicon:
     examples = [pair for (_, pair) in corpus.df[['entry', 'label']].explode('entry').iterrows()]
     self.update(examples)
 
-  def export_user_dict(self, dict_path='./tagger/user_dictionary.txt'):
+  def export_user_dict(self, dict_path='./tokenizer/user_dictionary.txt'):
     unigrams = self.lexicon[self.lexicon['ngram'] == 1].index.tolist()
     with open(dict_path, 'w') as f:
       f.writelines('\n'.join(['\t'.join(unigram.split('/')) for unigram in unigrams]))
@@ -120,22 +120,22 @@ class SentimentLexicon:
     
     return re.compile('|'.join(sorts.index))
 
-  def match(self, sentence, tagger, sorting=True):
+  def match_pattern(self, sentence, tokenizer, sorting=True):
     pattern = self.get_pattern(sorting)
-    tagged = tagger.tokenize(sentence)
+    tagged = tokenizer.get_tokens_str(sentence)
     matches = pattern.findall(tagged)
     return matches
 
-  def get_match_info(self, sentence, tagger, sorting=True):
-    matches = self.match(sentence, tagger, sorting)
+  def get_match_info(self, sentence, tokenizer, sorting=True):
+    matches = self.match(sentence, tokenizer, sorting)
     result = [(match, self.lexicon.loc[match, 'max.value'], self.lexicon.loc[match, 'max.prop']) for match in matches]
     return result
 
   def get_smoothed_lexicon(self):
     return self.lexicon.apply(smooth, labels=self.labels, axis=1)
 
-  def get_sent_probs(self, sentence, tagger, smoothing=True):
-    matches = self.match(sentence, tagger)
+  def get_sent_probs(self, sentence, tokenizer, smoothing=True):
+    matches = self.match(sentence, tokenizer)
     frequencies = self.lexicon.loc[matches].copy()
     if smoothing:
       smoothed = frequencies.apply(smooth, labels=self.labels, axis=1)
