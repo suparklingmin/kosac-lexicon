@@ -120,7 +120,7 @@ class SentimentLexicon:
     
     return re.compile('|'.join(sorts.index))
 
-  def match_pattern(self, sentence, tokenizer, sorting=True):
+  def match_patterns(self, sentence, tokenizer, sorting=True):
     pattern = self.get_pattern(sorting)
     tagged = tokenizer.get_tokens_str(sentence)
     matches = pattern.findall(tagged)
