@@ -131,7 +131,22 @@ Takeaways:
   morphemes, punctuation, and emoticons (`ㅋㅋ`, `!!!`, `…`) all carry sentiment in
   short reviews — reaches 85.9% at 99.6% coverage. So pick by goal: filter to
   content words for a **clean, human-readable** lexicon; keep everything to
-  **maximize classification accuracy**.
+  **maximize classification accuracy**:
+
+  ```python
+  # accuracy-max build: omit pos_tag to keep every token
+  lex.update_from_corpus(corpus, KiwiTokenizer(), min_freq=5)   # ~85.9% on NSMC test
+  ```
+
+  The example script exposes this as `--pos-filter`:
+  `python examples/nsmc_lexicon.py --pos-filter all`.
+
+```{note}
+This lexicon isn't bundled with the package — it's something you build from NSMC
+with the snippets above (or `examples/nsmc_lexicon.py`). The package ships only
+the frozen KOSAC lexicons; `update_from_corpus` is the supported way to derive
+your own from any labeled corpus.
+```
 
 ## Saving
 

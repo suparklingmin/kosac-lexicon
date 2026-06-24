@@ -23,8 +23,14 @@ from kosac.lexicon import GenericLexicon
 
 NSMC_URL = 'https://raw.githubusercontent.com/e9t/nsmc/master/ratings_train.txt'
 # Content-word tags (Sejong/Kiwi): nouns, verbs, adjectives, roots, adverbs.
-# Keeping only N-grams with a content token drops function-morpheme noise.
-CONTENT = {'NNG', 'NNP', 'VV', 'VA', 'XR', 'MAG'}
+# Keeping only N-grams with a content token drops function-morpheme noise and
+# gives a clean, readable lexicon. `all` keeps every token (punctuation, endings,
+# emoticons carry sentiment too) and scores highest on NSMC's own test split.
+POS_FILTERS = {
+    'content': {'NNG', 'NNP', 'VV', 'VA', 'XR', 'MAG'},
+    'content+ic': {'NNG', 'NNP', 'VV', 'VA', 'XR', 'MAG', 'IC'},
+    'all': None,
+}
 
 
 def fetch_nsmc(cache_dir):
@@ -63,8 +69,12 @@ def main():
                   help='use only the first N reviews (faster; default: all 150k)')
   ap.add_argument('--ngrams', type=int, nargs='+', default=[1, 2, 3])
   ap.add_argument('--min-freq', type=int, default=5)
+  ap.add_argument('--pos-filter', choices=sorted(POS_FILTERS), default='content',
+                  help="'content' for a clean lexicon (default); 'all' for the "
+                       'highest NSMC accuracy')
   ap.add_argument('--out', default='nsmc_lexicon.csv')
   args = ap.parse_args()
+  pos_tag = POS_FILTERS[args.pos_filter]
 
   try:
     from kosac.tokenizers import KiwiTokenizer
@@ -84,8 +94,8 @@ def main():
   # labeled data. Vectorized counting makes the full 150k set a ~1-2 min job.
   lex = GenericLexicon(ngrams=args.ngrams)
   lex.set_labels(['POS', 'NEG'])
-  print('building (tokenize + count)...')
-  lex.update_from_corpus(corpus, tok, pos_tag=CONTENT, min_freq=args.min_freq)
+  print(f'building (tokenize + count, pos-filter={args.pos_filter})...')
+  lex.update_from_corpus(corpus, tok, pos_tag=pos_tag, min_freq=args.min_freq)
   print(f'lexicon: {lex.get_size()} entries (min_freq={args.min_freq})')
 
   show_top(lex, 'POS')
