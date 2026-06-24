@@ -19,6 +19,16 @@ analyzer.analyze("이 영화는 안 좋다")["features"]["polarity"]["label"]   
 ```
 
 ```{toctree}
+:maxdepth: 1
+:caption: Tutorials
+
+tutorials/getting-started
+tutorials/social-science
+tutorials/machine-learning
+tutorials/negation-intensifier
+```
+
+```{toctree}
 :maxdepth: 2
 :caption: Guide
 
