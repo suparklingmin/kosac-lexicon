@@ -53,7 +53,7 @@ class KiwiTokenizer(Tokenizer):
   format. Extra keyword arguments are forwarded to ``kiwipiepy.Kiwi``.
   """
 
-  def __init__(self, **kwargs):
+  def __init__(self, user_words=None, **kwargs):
     try:
       from kiwipiepy import Kiwi
     except ImportError as exc:
@@ -61,6 +61,47 @@ class KiwiTokenizer(Tokenizer):
           'KiwiTokenizer requires `pip install kosac-lexicon[kiwi]`.'
       ) from exc
     self.kiwi = Kiwi(**kwargs)
+    if user_words:
+      self.add_user_words(user_words)
+
+  @staticmethod
+  def _split_word(word):
+    if isinstance(word, (tuple, list)):
+      return word[0], word[1]
+    form, _sep, tag = str(word).rpartition('/')
+    return form, tag
+
+  def add_user_words(self, words, score=0.0):
+    """Register ``(form, tag)`` pairs (or ``'form/tag'`` strings) as Kiwi user
+    words. Returns the number successfully added; entries Kiwi rejects (e.g. the
+    wildcard ``*`` forms) are skipped."""
+    added = 0
+    for word in words:
+      form, tag = self._split_word(word)
+      if not form or not tag:
+        continue
+      try:
+        self.kiwi.add_user_word(form, tag, score)
+        added += 1
+      except Exception:
+        continue
+    return added
+
+  @classmethod
+  def from_lexicon(cls, lexicon, tags=None, score=0.0, **kwargs):
+    """Build a tokenizer seeded with a lexicon's unigram entries as user words.
+
+    This biases Kiwi toward segmenting text the way the lexicon expects, easing
+    the Sejong/Kiwi tagset mismatch. ``tags`` optionally restricts which POS
+    tags are registered (e.g. ``{'NNG', 'VV', 'VA', 'XR'}`` for content words).
+    """
+    tokenizer = cls(**kwargs)
+    unigrams = lexicon.get_lexicon()
+    entries = unigrams[unigrams['ngram'] == 1].index
+    words = [(form, tag) for form, tag in (cls._split_word(e) for e in entries)
+             if tags is None or tag in tags]
+    tokenizer.add_user_words(words, score=score)
+    return tokenizer
 
   def tokenize(self, sentence):
     return [f'{token.form}/{token.tag}' for token in self.kiwi.tokenize(sentence)]

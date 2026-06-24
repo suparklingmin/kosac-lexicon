@@ -58,7 +58,7 @@ class SentimentAnalyzer:
   """
 
   def __init__(self, features='polarity', tokenizer=None, ngrams=DEFAULT_NGRAMS,
-               min_freq=0, threshold=0.0, smoothing=True):
+               min_freq=0, threshold=0.0, smoothing=True, align=False):
     from . import load_lexicon, FEATURES
 
     if features == 'all':
@@ -75,7 +75,14 @@ class SentimentAnalyzer:
 
     if tokenizer is None:
       from .tokenizers import KiwiTokenizer
-      tokenizer = KiwiTokenizer()
+      if align:
+        # Seed Kiwi's user dictionary with the lexicon's unigrams so segmentation
+        # tends to match the lexicon. All features share the same entries, so any
+        # one lexicon works as the seed.
+        seed = next(iter(self.lexicons.values()))
+        tokenizer = KiwiTokenizer.from_lexicon(seed)
+      else:
+        tokenizer = KiwiTokenizer()
     self.tokenizer = tokenizer
 
   def analyze(self, text):
