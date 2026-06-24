@@ -6,7 +6,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) on the
 package/API (the underlying lexicon data is fixed; its vintage is exposed as
 `kosac.__data_version__`).
 
-## [Unreleased]
+## [0.2.0] — 2026-06-25
+
+Second pre-release (beta).
 
 ### Added
 - `SentimentLexicon.save(filepath)` writes a lexicon to the package's CSV format
@@ -27,6 +29,11 @@ package/API (the underlying lexicon data is fixed; its vintage is exposed as
   them. This preserves tied top labels and makes the data mergeable/extensible.
   The package API is unchanged — loaded values are identical (absolute count =
   `round(relative × freq)` from the original 2016 release).
+
+### Documentation
+- Sphinx documentation site (guides + auto-generated API reference) deployed to
+  GitHub Pages, with five tutorials (getting started, counting, machine learning,
+  negation/intensifier, custom lexicon).
 
 ## [0.1.0] — 2026-06-24
 

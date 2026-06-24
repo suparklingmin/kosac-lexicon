@@ -3,7 +3,7 @@
 A morpheme-level **Korean sentiment lexicon** derived from the Korean Sentiment
 Analysis Corpus (**KOSAC**), packaged for easy reuse in Python.
 
-> **Pre-release (beta, 0.1.0).** Under review by colleagues and beta users; the
+> **Pre-release (beta, 0.2.0).** Under review by colleagues and beta users; the
 > API may change before the 1.0 release.
 
 The lexicon maps Korean morpheme N-grams (`surface/POS`, Sejong tagset) to
