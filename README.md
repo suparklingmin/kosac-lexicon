@@ -141,8 +141,8 @@ frequent label), and `max.prop` (its proportion).
 
 ## Documentation
 
-The full user manual (Korean) is at [`docs/manual.ko.md`](docs/manual.ko.md) —
-it covers every part of the API with examples.
+The full user manual covers every part of the API with examples:
+[English](docs/manual.md) · [한국어](docs/manual.ko.md).
 
 ## Examples
 
