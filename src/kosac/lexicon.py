@@ -1,4 +1,5 @@
 import re
+from collections import Counter
 
 import numpy as np
 import pandas as pd
@@ -167,24 +168,64 @@ class SentimentLexicon:
       Drop entries observed fewer than ``min_freq`` times.
     max_value_threshold : float
       Drop entries whose dominant-label proportion (``max.prop``) is below this.
+
+    Notes
+    -----
+    This is a full rebuild from the corpus: any counts previously in the lexicon
+    are discarded and the result holds exactly the N-grams observed in ``corpus``.
+    Counts are tallied with a :class:`~collections.Counter` and assembled in one
+    vectorized pass, so a 150k-sentence corpus builds in seconds rather than the
+    minutes a per-token pandas update would take.
     """
-    self.lexicon = self.original_lexicon.copy()
-    self.lexicon['ngram'] = None
-    self.lexicon['freq'] = None
-    self.lexicon[self.labels] = None
-    corpus.df['entry'] = corpus.df['text'].astype('str').apply(lambda x: tokenizer.get_ngrams(x, self.ngrams))
+    texts = corpus.df['text'].astype('str').tolist()
+    corpus.df['entry'] = tokenizer.get_ngrams_batch(texts, self.ngrams)
     exploded = corpus.df[['entry', 'label']].explode('entry')
-    examples = [(entry, label) for entry, label in zip(exploded['entry'], exploded['label'])
-                if isinstance(entry, str) and entry]
+    pairs = ((entry, label) for entry, label in zip(exploded['entry'], exploded['label'])
+             if isinstance(entry, str) and entry)
     if pos_tag is not None:
       allowed = {pos_tag} if isinstance(pos_tag, str) else set(pos_tag)
-      examples = [(entry, label) for (entry, label) in examples
-                  if any(token.rsplit('/', 1)[-1] in allowed for token in entry.split(' '))]
-    self.update(examples)
+      pairs = ((entry, label) for (entry, label) in pairs
+               if any(token.rsplit('/', 1)[-1] in allowed for token in entry.split(' ')))
+    self.lexicon = self._lexicon_from_tally(Counter(pairs))
     if min_freq or max_value_threshold:
       df = self.lexicon
-      keep = df['freq'].notna() & (df['freq'] >= min_freq) & (df['max.prop'] >= max_value_threshold)
+      keep = (df['freq'] >= min_freq) & (df['max.prop'] >= max_value_threshold)
       self.lexicon = df[keep]
+
+  def _lexicon_from_tally(self, tally):
+    """Assemble the lexicon DataFrame from a ``{(entry, label): count}`` tally.
+
+    Builds the absolute-count matrix in one shot and derives ``freq`` /
+    ``max.value`` / ``max.prop`` the same way the CSV loader does. Labels outside
+    ``self.labels`` are an error (the corpus must use this lexicon's labels).
+    """
+    columns = ['ngram', 'freq', *self.labels, 'max.value', 'max.prop']
+    unknown = {label for (_entry, label) in tally} - set(self.labels)
+    if unknown:
+      raise ValueError(
+          f'corpus labels {sorted(unknown)} are not in this lexicon\'s labels '
+          f'{self.labels}; set matching labels (e.g. GenericLexicon.set_labels).')
+    entries = sorted({entry for (entry, _label) in tally})
+    if not entries:
+      df = pd.DataFrame(columns=columns)
+      df.index.name = 'entry'
+      return df
+    label_col = {label: i for i, label in enumerate(self.labels)}
+    row_of = {entry: i for i, entry in enumerate(entries)}
+    matrix = np.zeros((len(entries), len(self.labels)), dtype=int)
+    for (entry, label), n in tally.items():
+      matrix[row_of[entry], label_col[label]] = n
+    counts = pd.DataFrame(matrix, index=pd.Index(entries, name='entry'),
+                          columns=self.labels)
+    freq = counts.sum(axis=1)
+    df = pd.DataFrame(index=counts.index)
+    df['ngram'] = [entry.count(' ') + 1 for entry in entries]
+    df['freq'] = freq
+    for label in self.labels:
+      df[label] = counts[label]
+    df['max.value'] = counts.idxmax(axis=1)
+    df['max.prop'] = counts.max(axis=1) / freq
+    return df[columns]
 
   def export_user_dict(self, dict_path='user_dictionary.txt'):
     unigrams = self.lexicon[self.lexicon['ngram'] == 1].index.tolist()

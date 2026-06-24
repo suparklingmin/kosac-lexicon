@@ -6,6 +6,27 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) on the
 package/API (the underlying lexicon data is fixed; its vintage is exposed as
 `kosac.__data_version__`).
 
+## [Unreleased]
+
+### Added
+- `Tokenizer.tokenize_batch()` / `get_ngrams_batch()` tokenize many sentences at
+  once; `KiwiTokenizer` overrides them to use Kiwi's parallel batch API (results
+  are identical to per-sentence tokenizing, just faster).
+
+### Changed
+- `SentimentLexicon.update_from_corpus()` now tallies counts with a `Counter` and
+  assembles the lexicon in one vectorized pass instead of a per-token pandas
+  update, and tokenizes the corpus in one batch. Building from a large corpus is
+  dramatically faster (a 150k-review corpus that took ~20 min now builds in ~15 s);
+  results are identical. It also fails loud (`ValueError`) when the corpus carries
+  a label the lexicon doesn't declare, and the rebuild now holds exactly the
+  N-grams observed in the corpus (stale all-`None` rows from the previous index are
+  no longer kept).
+
+### Documentation
+- New tutorial and runnable example (`examples/nsmc_lexicon.py`) building a POS/NEG
+  lexicon from the NSMC movie-review corpus end to end.
+
 ## [0.2.0] — 2026-06-25
 
 Second pre-release (beta).

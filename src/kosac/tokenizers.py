@@ -44,6 +44,20 @@ class Tokenizer:
     tokens = self.tokenize(sentence)
     return [' '.join(entry) for n in ns for entry in ngrams(tokens, n)]
 
+  def tokenize_batch(self, sentences):
+    """Tokenize many sentences at once. The default applies :meth:`tokenize`
+    per sentence; tokenizers with a batch API (e.g. Kiwi) override this to
+    process the whole list in parallel."""
+    return [self.tokenize(sentence) for sentence in sentences]
+
+  def get_ngrams_batch(self, sentences, ns):
+    """N-grams for many sentences (one list per sentence), via tokenize_batch.
+
+    Equivalent to ``[get_ngrams(s, ns) for s in sentences]`` but routed through
+    :meth:`tokenize_batch`, so a batch tokenizer parallelizes the heavy step."""
+    return [[' '.join(entry) for n in ns for entry in ngrams(tokens, n)]
+            for tokens in self.tokenize_batch(sentences)]
+
 
 # Kiwi (kiwipiepy)
 class KiwiTokenizer(Tokenizer):
@@ -105,6 +119,12 @@ class KiwiTokenizer(Tokenizer):
 
   def tokenize(self, sentence):
     return [f'{token.form}/{token.tag}' for token in self.kiwi.tokenize(sentence)]
+
+  def tokenize_batch(self, sentences):
+    # Kiwi tokenizes an iterable of sentences in parallel; results stay in order
+    # and are identical to tokenizing each sentence on its own.
+    return [[f'{token.form}/{token.tag}' for token in tokens]
+            for tokens in self.kiwi.tokenize(list(sentences))]
 
   def tokenize_with_offsets(self, sentence):
     return [(f'{token.form}/{token.tag}', token.start, token.start + token.len)
