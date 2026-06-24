@@ -6,6 +6,16 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) on the
 package/API (the underlying lexicon data is fixed; its vintage is exposed as
 `kosac.__data_version__`).
 
+## [Unreleased]
+
+### Added
+- `SentimentLexicon.update_from_corpus()` gains optional `pos_tag`, `min_freq`,
+  and `max_value_threshold` arguments to filter a corpus-built lexicon. `pos_tag`
+  keeps only N-grams containing at least one token of an allowed POS (e.g. content
+  words), dropping pure function-morpheme entries (`이/MM`, `다/EF`) while keeping
+  mixed constructions like `ㄹ/ETM 수/NNB 있/VV`. Backward compatible (no
+  arguments → unchanged).
+
 ## [0.1.0] — 2026-06-24
 
 First pre-release (beta) of the KOSAC morpheme-level Korean sentiment lexicon
