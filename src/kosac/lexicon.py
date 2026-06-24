@@ -127,14 +127,43 @@ class SentimentLexicon:
     for (morph, tag) in examples:
       self.add_token(morph, tag, verbose=False)
 
-  def update_from_corpus(self, corpus, tokenizer):
+  def update_from_corpus(self, corpus, tokenizer, pos_tag=None, min_freq=0,
+                         max_value_threshold=0.0):
+    """Rebuild the lexicon's frequencies from a labeled corpus.
+
+    Each text is tokenized into morpheme N-grams and its label is counted for
+    every N-gram. The optional filters keep the result from being dominated by
+    uninformative entries:
+
+    Parameters
+    ----------
+    pos_tag : str or iterable of str, optional
+      Keep only N-grams that contain at least one token with one of these POS
+      tags (e.g. ``{'NNG', 'NNP', 'VV', 'VA', 'XR', 'MAG'}`` for content words).
+      This drops pure function-morpheme entries (``이/MM``, ``다/EF``) while
+      keeping meaningful constructions like ``ㄹ/ETM 수/NNB 있/VV`` ("can ...").
+    min_freq : int
+      Drop entries observed fewer than ``min_freq`` times.
+    max_value_threshold : float
+      Drop entries whose dominant-label proportion (``max.prop``) is below this.
+    """
     self.lexicon = self.original_lexicon.copy()
     self.lexicon['ngram'] = None
     self.lexicon['freq'] = None
     self.lexicon[self.labels] = None
     corpus.df['entry'] = corpus.df['text'].astype('str').apply(lambda x: tokenizer.get_ngrams(x, self.ngrams))
-    examples = [pair for (_, pair) in corpus.df[['entry', 'label']].explode('entry').iterrows()]
+    exploded = corpus.df[['entry', 'label']].explode('entry')
+    examples = [(entry, label) for entry, label in zip(exploded['entry'], exploded['label'])
+                if isinstance(entry, str) and entry]
+    if pos_tag is not None:
+      allowed = {pos_tag} if isinstance(pos_tag, str) else set(pos_tag)
+      examples = [(entry, label) for (entry, label) in examples
+                  if any(token.rsplit('/', 1)[-1] in allowed for token in entry.split(' '))]
     self.update(examples)
+    if min_freq or max_value_threshold:
+      df = self.lexicon
+      keep = df['freq'].notna() & (df['freq'] >= min_freq) & (df['max.prop'] >= max_value_threshold)
+      self.lexicon = df[keep]
 
   def export_user_dict(self, dict_path='user_dictionary.txt'):
     unigrams = self.lexicon[self.lexicon['ngram'] == 1].index.tolist()

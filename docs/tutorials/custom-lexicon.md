@@ -101,10 +101,23 @@ entry
 다/EF       2   1   1       POS
 ```
 
-Every morpheme of a `POS` sentence is counted as POS, so frequent function
-morphemes (e.g. `다/EF`, here in both sentences) end up mixed — the same noise
-discussed in the [counting tutorial](counting.md). Feed it many
-examples so the signal dominates.
+Every morpheme of a `POS` sentence is counted as POS, so function morphemes
+(`이/MM`, `다/EF`, `가/JKS`, …) are aggregated too — the same noise discussed in
+the [counting tutorial](counting.md). Restrict the build to **content words**
+with `pos_tag`:
+
+```python
+lex.update_from_corpus(
+    corpus, KiwiTokenizer(),
+    pos_tag={"NNG", "NNP", "VV", "VA", "XR", "MAG"},   # content words only
+)
+list(lex.get_lexicon().index)
+# ['제품/NNG', '정말/MAG', '좋/VA', '서비스/NNG', '너무/MAG', '별로/MAG']
+```
+
+`min_freq` and `max_value_threshold` drop rare or low-confidence entries as well,
+e.g. `update_from_corpus(corpus, tok, pos_tag=..., min_freq=5,
+max_value_threshold=0.6)`.
 
 ## Using your custom lexicon
 
