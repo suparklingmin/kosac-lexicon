@@ -184,29 +184,38 @@ class SentimentLexicon:
 
 
 class PolarityLexicon(SentimentLexicon):
+  """Sentiment polarity: POS / NEG / NEUT / COMP (mixed) / None."""
   labels = ['COMP', 'NEG', 'NEUT', 'None', 'POS']
   _feature = 'polarity'
 
 class IntensityLexicon(SentimentLexicon):
+  """Sentiment intensity: High / Medium / Low / None."""
   labels = ['High', 'Low', 'Medium', 'None']
   _feature = 'intensity'
 
 class ExpressiveTypeLexicon(SentimentLexicon):
+  """How the sentiment is expressed (direct/indirect/writing-device, ...)."""
   labels = ['dir-action', 'dir-explicit', 'dir-speech', 'indirect', 'writing-device']
   _feature = 'expressive-type'
 
 class NestedOrderLexicon(SentimentLexicon):
+  """Nesting depth of the subjective expression (0–3)."""
   labels = ['0', '1', '2', '3']
   _feature = 'nested-order'
 
 class SubjectivityPolarityLexicon(SentimentLexicon):
+  """Polarity of the subjectivity: POS / NEG / NEUT / COMP."""
   labels = ['COMP', 'NEG', 'NEUT', 'POS']
   _feature = 'subjectivity-polarity'
 
 class SubjectivityTypeLexicon(SentimentLexicon):
+  """Type of subjectivity: Judgment / Emotion / Argument / Intention / ..."""
   labels = ['Agreement', 'Argument', 'Emotion', 'Intention', 'Judgment', 'Others', 'Speculation']
   _feature = 'subjectivity-type'
 
 class GenericLexicon(SentimentLexicon):
+  """A lexicon with user-defined labels (see :meth:`set_labels`)."""
+
   def set_labels(self, labels: list):
+    """Set the label set for this lexicon."""
     self.labels = labels

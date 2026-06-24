@@ -15,6 +15,9 @@ wheels/
 .coverage
 htmlcov/
 
+# Sphinx docs build
+docs/_build/
+
 # Virtual environments
 .venv/
 venv/

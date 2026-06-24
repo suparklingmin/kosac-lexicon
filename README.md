@@ -144,8 +144,18 @@ frequent label), and `max.prop` (its proportion).
 
 ## Documentation
 
-The full user manual covers every part of the API with examples:
+Full documentation — guides plus an auto-generated API reference — is built with
+Sphinx from [`docs/`](docs/) and deployed to GitHub Pages by
+[`.github/workflows/docs.yml`](.github/workflows/docs.yml) on every push to
+`main`. The user manual is also readable directly on GitHub:
 [English](docs/manual.md) · [한국어](docs/manual.ko.md).
+
+Build the site locally:
+
+```bash
+pip install -e ".[docs]"
+sphinx-build -b html docs docs/_build/html   # output in docs/_build/html
+```
 
 ## Examples
 
