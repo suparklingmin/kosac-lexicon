@@ -169,6 +169,9 @@ corpus = Corpus("data/example.csv")      # 헤더 없는 text,label CSV
 lex.update_from_corpus(corpus, KiwiTokenizer())
 
 lex.export_user_dict("user_dictionary.txt")  # 유니그램을 form\tPOS 로 내보내기
+
+lex.save("my-lexicon.csv")               # 패키지 CSV 형식(ngram + 카운트)으로 저장
+GenericLexicon(filepath="my-lexicon.csv", ngrams=[1])   # 다시 로드(라벨 자동 추론)
 ```
 
 ## 6. 통합 분석기 (고수준 API)

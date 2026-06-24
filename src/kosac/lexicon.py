@@ -19,6 +19,10 @@ class SentimentLexicon:
       # keep_default_na=False so the literal 'None' label (a valid polarity /
       # intensity value) stays a string, not a missing value.
       df = pd.read_csv(filepath, keep_default_na=False)
+      # Concrete subclasses declare `labels`; a GenericLexicon infers them from
+      # the CSV's count columns (everything but `ngram`), enabling round-trips.
+      if not self.labels:
+        self.labels = [c for c in df.columns if c != 'ngram']
       df['entry'] = df['ngram'].str.replace(';', ' ')
 
       # The CSV stores only absolute label counts; derive freq (= the number of
@@ -72,6 +76,19 @@ class SentimentLexicon:
 
   def get_original_lexicon(self):
     return self.original_lexicon
+
+  def save(self, filepath):
+    """Write the lexicon to a CSV in the package's absolute-count format.
+
+    Columns are `ngram` (morphemes joined by `;`) and one absolute-count column
+    per label — the same format the loader reads. Reload it through the
+    constructor: a concrete subclass uses its declared labels, while
+    `GenericLexicon(filepath=...)` infers the labels from the columns.
+    """
+    out = self.lexicon[self.labels].astype(int).copy()
+    out.insert(0, 'ngram', out.index.str.replace(' ', ';'))
+    out.to_csv(filepath, index=False)
+    return filepath
 
   def set_lexicon(self, min_freq=0, threshold=0.0):
     # Re-applicable filter: always start from the originally loaded lexicon so the

@@ -9,6 +9,10 @@ package/API (the underlying lexicon data is fixed; its vintage is exposed as
 ## [Unreleased]
 
 ### Added
+- `SentimentLexicon.save(filepath)` writes a lexicon to the package's CSV format
+  (`ngram` + one count column per label). The constructor reads it back —
+  concrete subclasses use their declared labels, and `GenericLexicon` now infers
+  labels from the CSV columns, so custom lexicons round-trip via CSV.
 - `SentimentLexicon.update_from_corpus()` gains optional `pos_tag`, `min_freq`,
   and `max_value_threshold` arguments to filter a corpus-built lexicon. `pos_tag`
   keeps only N-grams containing at least one token of an allowed POS (e.g. content

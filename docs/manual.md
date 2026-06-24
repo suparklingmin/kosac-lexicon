@@ -170,6 +170,9 @@ corpus = Corpus("data/example.csv")      # headerless text,label CSV
 lex.update_from_corpus(corpus, KiwiTokenizer())
 
 lex.export_user_dict("user_dictionary.txt")  # export unigrams as form\tPOS
+
+lex.save("my-lexicon.csv")               # save in the package CSV format (ngram + counts)
+GenericLexicon(filepath="my-lexicon.csv", ngrams=[1])   # reload (labels inferred)
 ```
 
 ## 6. SentimentAnalyzer (high-level API)

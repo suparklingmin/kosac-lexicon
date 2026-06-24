@@ -141,21 +141,25 @@ lex.export_user_dict("user_dictionary.txt")   # one 'surface\tPOS' line per unig
 
 ## Saving and reloading
 
-The constructor needs the label set at construction time, which a from-scratch
-`GenericLexicon` doesn't have, so the simplest lossless way to persist one is to
-pickle the object:
+`save()` writes the lexicon in the package's CSV format (`ngram` + one absolute-
+count column per label), and the constructor reads it back. A concrete subclass
+uses its declared labels; a `GenericLexicon` **infers** them from the columns:
+
+```python
+lex.save("my-lexicon.csv")           # ngram,POS,NEG\n좋/VA,2,0\n싫/VA,0,1
+
+reloaded = GenericLexicon(filepath="my-lexicon.csv", ngrams=[1])
+reloaded.get_labels()                # ['POS', 'NEG']  (inferred from the columns)
+reloaded.get_entry("좋/VA")[["freq", "POS", "NEG", "max.value"]].to_dict()
+# {'freq': 2, 'POS': 2, 'NEG': 0, 'max.value': 'POS'}
+```
+
+To snapshot the exact in-memory object instead (e.g. mid-experiment), pickle it:
 
 ```python
 import pickle
-
 with open("lex.pkl", "wb") as f:
     pickle.dump(lex, f)
-
-with open("lex.pkl", "rb") as f:
-    reloaded = pickle.load(f)
-
-reloaded.get_size()                  # 2
-reloaded.get_entry("좋/VA")[["freq", "POS", "NEG", "max.value"]].to_dict()
-# {'freq': 2, 'POS': 2, 'NEG': 0, 'max.value': 'POS'}
+reloaded = pickle.load(open("lex.pkl", "rb"))
 ```
 

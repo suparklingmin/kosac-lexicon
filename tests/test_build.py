@@ -1,6 +1,32 @@
 from kosac.corpora import Corpus
-from kosac.lexicon import GenericLexicon
+from kosac.lexicon import GenericLexicon, PolarityLexicon
 from kosac.tokenizers import Tokenizer
+
+
+def test_save_reload_concrete_subclass(tmp_path):
+    lex = PolarityLexicon(ngrams=[1])
+    lex.update([("좋/VA", "POS"), ("좋/VA", "POS"), ("싫/VA", "NEG")])
+    path = tmp_path / "pol.csv"
+    lex.save(str(path))
+
+    assert open(path).read().splitlines()[0] == "ngram,COMP,NEG,NEUT,None,POS"
+    reloaded = PolarityLexicon(filepath=str(path), ngrams=[1])
+    assert reloaded.get_size() == 2
+    assert int(reloaded.get_entry("좋/VA")["POS"]) == 2
+    assert reloaded.get_entry("싫/VA")["max.value"] == "NEG"
+
+
+def test_save_reload_generic_infers_labels(tmp_path):
+    lex = GenericLexicon(ngrams=[1])
+    lex.set_labels(["POS", "NEG"])
+    lex.update([("좋/VA", "POS"), ("좋/VA", "POS"), ("싫/VA", "NEG")])
+    path = tmp_path / "gen.csv"
+    lex.save(str(path))
+
+    reloaded = GenericLexicon(filepath=str(path), ngrams=[1])
+    assert reloaded.get_labels() == ["POS", "NEG"]   # inferred from CSV columns
+    assert int(reloaded.get_entry("좋/VA")["POS"]) == 2
+    assert int(reloaded.get_entry("좋/VA")["freq"]) == 2
 
 
 def test_build_lexicon_from_empty():
