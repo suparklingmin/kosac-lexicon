@@ -58,7 +58,10 @@ def load_lexicon(feature, ngrams=[1], min_freq=0, threshold=0.0):
   return cls.load(ngrams=ngrams, min_freq=min_freq, threshold=threshold)
 
 
+from .analyzer import SentimentAnalyzer  # noqa: E402  (after load_lexicon/FEATURES)
+
 __all__ = [
+    'SentimentAnalyzer',
     'SentimentLexicon',
     'PolarityLexicon',
     'IntensityLexicon',

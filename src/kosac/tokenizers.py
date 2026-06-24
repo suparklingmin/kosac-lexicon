@@ -23,6 +23,23 @@ class Tokenizer:
   def get_tokens_str(self, sentence):
     return ' '.join(self.tokenize(sentence))
 
+  def tokenize_with_offsets(self, sentence):
+    """Return ``(token, start, end)`` triples aligning tokens to char offsets.
+
+    The default implementation locates each token as a substring of the input.
+    Subclasses with real offset information (e.g. Kiwi) should override it.
+    """
+    spans = []
+    cursor = 0
+    for token in self.tokenize(sentence):
+      start = sentence.find(token, cursor)
+      if start < 0:
+        start = cursor
+      end = start + len(token)
+      spans.append((token, start, end))
+      cursor = end
+    return spans
+
   def get_ngrams(self, sentence, ns):
     tokens = self.tokenize(sentence)
     return [' '.join(entry) for n in ns for entry in ngrams(tokens, n)]
@@ -47,6 +64,10 @@ class KiwiTokenizer(Tokenizer):
 
   def tokenize(self, sentence):
     return [f'{token.form}/{token.tag}' for token in self.kiwi.tokenize(sentence)]
+
+  def tokenize_with_offsets(self, sentence):
+    return [(f'{token.form}/{token.tag}', token.start, token.start + token.len)
+            for token in self.kiwi.tokenize(sentence)]
 
 
 # HuggingFace Transformers
