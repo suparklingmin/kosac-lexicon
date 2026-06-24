@@ -101,23 +101,25 @@ That is a strong unsupervised baseline (supervised models land around 85–90%).
 
 ## Tuning
 
-Sweeping one knob at a time over the full train/test split (accuracy = over all
-test reviews; *cov* = fraction with ≥ 1 match):
+Sweeping one knob at a time over the full train/test split. *cov* is the fraction
+of reviews with ≥ 1 match; **acc. (all)** is accuracy over every test review, while
+**acc. (covered)** is accuracy over just the covered ones (so the gap between them
+is what coverage costs):
 
-| knob | setting | entries | coverage | accuracy |
-|------|---------|--------:|---------:|---------:|
-| **N-gram order** | `[1]` | 12k | 97.4% | 80.6% |
-| | `[1, 2]` | 57k | 97.4% | 82.4% |
-| | `[1, 2, 3]` | 105k | 97.4% | **83.3%** |
-| **min_freq** | 3 | 193k | 97.5% | 83.2% |
-| | 5 | 105k | 97.4% | 83.3% |
-| | 20 | 24k | 97.0% | 82.5% |
-| **max.prop ≥** | 0.0 | 105k | 97.4% | 83.3% |
-| | 0.7 | 62k | 94.3% | 81.4% |
-| | 0.8 | 47k | 88.6% | 77.7% |
-| **POS filter** | content words | 105k | 97.4% | 83.3% |
-| | content + `IC` | 106k | 97.8% | 83.7% |
-| | **all tags** | 131k | **99.6%** | **85.9%** |
+| knob | setting | entries | coverage | acc. (all) | acc. (covered) |
+|------|---------|--------:|---------:|-----------:|---------------:|
+| **N-gram order** | `[1]` | 12k | 97.4% | 80.6% | 82.7% |
+| | `[1, 2]` | 57k | 97.4% | 82.4% | 84.6% |
+| | `[1, 2, 3]` | 105k | 97.4% | **83.3%** | 85.5% |
+| **min_freq** | 3 | 193k | 97.5% | 83.2% | 85.4% |
+| | 5 | 105k | 97.4% | 83.3% | 85.5% |
+| | 20 | 24k | 97.0% | 82.5% | 85.0% |
+| **max.prop ≥** | 0.0 | 105k | 97.4% | 83.3% | 85.5% |
+| | 0.7 | 62k | 94.3% | 81.4% | 86.4% |
+| | 0.8 | 47k | 88.6% | 77.7% | **87.7%** |
+| **POS filter** | content words | 105k | 97.4% | 83.3% | 85.5% |
+| | content + `IC` | 106k | 97.8% | 83.7% | 85.6% |
+| | **all tags** | 131k | **99.6%** | **85.9%** | 86.2% |
 
 Takeaways:
 
