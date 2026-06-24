@@ -26,6 +26,7 @@ tutorials/getting-started
 tutorials/social-science
 tutorials/machine-learning
 tutorials/negation-intensifier
+tutorials/custom-lexicon
 ```
 
 ```{toctree}

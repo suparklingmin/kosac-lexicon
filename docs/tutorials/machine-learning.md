@@ -61,7 +61,9 @@ probability method, which handles function-morpheme noise — see the
 
   ```python
   from sklearn.model_selection import cross_val_score
-  cross_val_score(clf, texts, labels, cv=5)
+  cross_val_score(clf, train_texts, labels, cv=2)
+  # array([0.333, 0.333]) — six toy samples are far too few to be meaningful;
+  #                          run this on a real labeled corpus.
   ```
 
 - Combine lexicon features with bag-of-words for a stronger baseline:
@@ -74,4 +76,5 @@ probability method, which handles function-morpheme noise — see the
       ("kosac", KosacVectorizer("all")),
       ("tfidf", TfidfVectorizer()),
   ])
+  features.fit_transform(train_texts, labels).shape   # (6, 51) — 29 KOSAC + 22 TF-IDF
   ```

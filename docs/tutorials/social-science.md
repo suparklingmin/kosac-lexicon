@@ -72,12 +72,17 @@ collection:
 ```python
 frame = analyzer.count_frame(texts)
 totals = frame[["polarity.POS", "polarity.NEG", "polarity.NEUT"]].sum()
+totals.to_dict()
+# {'polarity.POS': 5, 'polarity.NEG': 10, 'polarity.NEUT': 1}
+
 positivity = totals["polarity.POS"] / (totals["polarity.POS"] + totals["polarity.NEG"])
+round(positivity, 3)   # 0.333
 ```
 
-Across thousands of documents the per-morpheme noise averages out, and the
-positive/negative ratio becomes a meaningful corpus indicator — which is exactly
-how the method is used in the literature.
+With only three sentences here the noise still dominates (`positivity` is 0.33
+despite a balanced set) — which is exactly why this method needs a large corpus.
+Across thousands of documents the per-morpheme noise averages out and the
+positive/negative ratio becomes a meaningful indicator, as used in the literature.
 
 ## Reading texts from a file
 
@@ -87,6 +92,6 @@ works directly:
 ```python
 import pandas as pd
 
-df = pd.read_csv("reviews.csv")            # a column named "text"
-result = analyzer.count_frame(df["text"])
+df = pd.DataFrame({"text": texts})         # e.g. pd.read_csv("reviews.csv")
+analyzer.count_frame(df["text"]).shape     # (3, 8)
 ```
