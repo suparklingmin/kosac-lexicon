@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "kosac-lexicon"
-version = "1.0.0"
+version = "0.1.0"
 description = "KOSAC: a morpheme-level Korean sentiment analysis lexicon"
 readme = "README.md"
 requires-python = ">=3.9"

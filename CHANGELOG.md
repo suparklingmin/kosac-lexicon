@@ -6,10 +6,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) on the
 package/API (the underlying lexicon data is fixed; its vintage is exposed as
 `kosac.__data_version__`).
 
-## [1.0.0] — 2026-06-24
+## [0.1.0] — 2026-06-24
 
-First packaged release of the KOSAC morpheme-level Korean sentiment lexicon
-(data vintage 2016).
+First pre-release (beta) of the KOSAC morpheme-level Korean sentiment lexicon
+(data vintage 2016), for review by colleagues and beta users ahead of the 1.0
+release. The API may still change.
 
 ### Added
 - Installable package `kosac-lexicon` with the six sentiment-feature lexicons

@@ -22,7 +22,7 @@ from .lexicon import (
     SubjectivityTypeLexicon,
 )
 
-__version__ = '1.0.0'
+__version__ = '0.1.0'
 __data_version__ = '2016'
 
 _REGISTRY = {
