@@ -40,3 +40,11 @@ def test_ngram_selection_is_monotonic():
 def test_unknown_feature_raises():
     with pytest.raises(ValueError):
         kosac.load_lexicon("nonsense")
+
+
+@pytest.mark.parametrize("feature", ["polarity", "intensity"])
+def test_none_label_is_not_parsed_as_nan(feature):
+    # 'None' is a valid label; it must survive CSV loading (not become NaN).
+    df = kosac.load_lexicon(feature, ngrams=[1, 2, 3]).get_lexicon()
+    assert df["max.value"].isna().sum() == 0
+    assert "None" in set(df["max.value"])

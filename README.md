@@ -90,10 +90,15 @@ neg = SentimentAnalyzer('polarity', negation=True)
 neg.analyze('이 영화는 안 좋다')['features']['polarity']['label']   # 'NEG'
 
 analyzer.analyze_frame(['좋다', '싫다'])       # tidy pandas DataFrame
+
+# frequency-count method (counts of POS/NEG/... words), common in social science:
+analyzer.count('빗물이 흐르고 눈물도 흐르고')['features']['polarity']['counts']
 ```
 
 `align=True` seeds Kiwi's user dictionary from the lexicon to reduce the tagset
 mismatch. Negation/intensifier are window-based heuristics and off by default.
+`count()` / `count_batch()` / `count_frame()` provide the word-count method
+instead of probabilities.
 
 ### Command line
 

@@ -20,6 +20,8 @@ def _build_parser():
   analyze.add_argument('--intensifier', action='store_true', help='enable intensifier handling')
   analyze.add_argument('--align', action='store_true',
                        help="seed Kiwi's user dictionary from the lexicon")
+  analyze.add_argument('--count', action='store_true',
+                       help='frequency-count method (word counts) instead of probabilities')
   analyze.add_argument('--compact', action='store_true',
                        help='emit one compact JSON object per line')
 
@@ -61,7 +63,7 @@ def main(argv=None):
   else:
     texts = [line.rstrip('\n') for line in sys.stdin if line.strip()]
 
-  results = analyzer.analyze_batch(texts)
+  results = analyzer.count_batch(texts) if args.count else analyzer.analyze_batch(texts)
   if args.compact:
     for result in results:
       print(json.dumps(result, ensure_ascii=False))

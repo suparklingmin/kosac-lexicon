@@ -16,7 +16,9 @@ class SentimentLexicon:
     self.threshold = 0.0
 
     if filepath:
-      df = pd.read_csv(filepath)
+      # keep_default_na=False so the literal 'None' label (a valid polarity /
+      # intensity value) is not parsed as a missing value.
+      df = pd.read_csv(filepath, keep_default_na=False)
       df['entry'] = df['ngram'].str.replace(';', ' ')
 
       # relative frequency -> absolute frequency
@@ -68,8 +70,11 @@ class SentimentLexicon:
     return self.original_lexicon
 
   def set_lexicon(self, min_freq=0, threshold=0.0):
-    df = self.lexicon
+    # Re-applicable filter: always start from the originally loaded lexicon so the
+    # threshold can be loosened as well as tightened. Falls back to the current
+    # lexicon for from-scratch builds (where original_lexicon is empty).
     # TODO: frequency 대신 tf-idf
+    df = self.original_lexicon if len(self.original_lexicon) else self.lexicon
     self.lexicon = df[(df['freq'] >= min_freq) & (df['max.prop'] > threshold)]
     self.min_freq = min_freq
     self.threshold = threshold
@@ -172,6 +177,10 @@ class SentimentLexicon:
       smoothed = frequencies[self.labels]
 
     return softmax(np.log(smoothed).sum()).sort_values(ascending=False)
+
+  # Legacy aliases for the original SentLex notebook API.
+  get = get_entry
+  match = match_patterns
 
 
 class PolarityLexicon(SentimentLexicon):

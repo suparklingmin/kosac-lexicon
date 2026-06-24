@@ -28,7 +28,7 @@ Optional extras: `pip install -e ".[kiwi]"` (Kiwi POS tokenizer via `kiwipiepy` 
 
 ### Core model (`src/kosac/lexicon.py`)
 - `SentimentLexicon` base class wraps a pandas DataFrame indexed by `entry` (space-joined morphemes). Six concrete subclasses (`PolarityLexicon`, `IntensityLexicon`, `ExpressiveTypeLexicon`, `NestedOrderLexicon`, `SubjectivityPolarityLexicon`, `SubjectivityTypeLexicon`) + `GenericLexicon`. **Subclasses differ only by two class attributes**: `labels` (must match the value-columns of the corresponding CSV) and `_feature` (the bundled-data key).
-- On load, per-label **relative** frequencies in the CSV become **absolute** counts (`label * freq`). `set_lexicon(min_freq, threshold)` filters `self.lexicon`; the unfiltered copy stays in `self.original_lexicon`.
+- On load, per-label **relative** frequencies in the CSV become **absolute** counts (`label * freq`). **`pd.read_csv` uses `keep_default_na=False`** so the literal `None` label (a valid polarity/intensity value, 557 polarity entries) is not parsed as NaN. `set_lexicon(min_freq, threshold)` re-filters from `self.original_lexicon` (so it can loosen, not just tighten). Legacy aliases: `get`=`get_entry`, `match`=`match_patterns`.
 - Matching: `get_pattern()` builds a regex from entries sorted longest-N-gram / highest-`max.prop` first (via `utils.sort`); entries are `re.escape`d (some contain a regex-special `*`, e.g. `가*/JKS`). `match_patterns()` matches against a tokenized sentence; `get_sent_probs()` smooths counts, sums log-probs, applies `softmax`.
 
 ### Loader API — the low-level entry point
@@ -37,6 +37,7 @@ Optional extras: `pip install -e ".[kiwi]"` (Kiwi POS tokenizer via `kiwipiepy` 
 
 ### High-level API (`analyzer.py`) — the recommended entry point
 - `kosac.SentimentAnalyzer(features, tokenizer=None, ngrams=..., negation=, intensifier=, align=)` bundles one/all feature lexicons + a tokenizer (default `KiwiTokenizer`). `analyze(text)` returns a JSON-able dict: per feature, `{label, prob, probs, matches}` where each match has `entry`, char `span`, `text`, `max_value`, `negated`, `weight`. `analyze_batch` / `analyze_frame` (pandas) for many texts.
+- `count(text)` / `count_batch` / `count_frame` are the **frequency method** (the social-science use from the title of the legacy notebook): tally matched words by their `max.value`, returning `{label, counts, proportions, total, matches}`. Same matcher as `analyze`, different aggregation.
 - `select_matches()` is a greedy leftmost-longest, non-overlapping token matcher (uses `tokenizer.tokenize_with_offsets`) — it replaces regex `match_patterns` for the analyzer and yields char offsets.
 - Negation/intensifier are opt-in window heuristics over token positions (`DEFAULT_NEGATIONS`/`DEFAULT_INTENSIFIERS`); negation only flips features whose labels include both POS and NEG. Aggregation is a per-entry weighted log-prob sum + softmax (equivalent to `get_sent_probs` when composition is off).
 

@@ -134,6 +134,71 @@ class SentimentAnalyzer:
       records.append(row)
     return pd.DataFrame.from_records(records)
 
+  def count(self, text):
+    """Frequency-based analysis (the method common in social-science studies).
+
+    Counts matched morphemes by their dominant label (``max.value``) and reports
+    counts, proportions, and the most frequent label per feature.
+    """
+    text = str(text)
+    tokens = self.tokenizer.tokenize_with_offsets(text)
+    return {
+        'text': text,
+        'tokens': [token for token, _start, _end in tokens],
+        'features': {feature: self._count(text, tokens, lexicon)
+                     for feature, lexicon in self.lexicons.items()},
+    }
+
+  def count_batch(self, texts):
+    """Frequency-count an iterable of strings. Returns a list of result dicts."""
+    return [self.count(text) for text in texts]
+
+  def count_frame(self, texts):
+    """Frequency-count into a ``pandas.DataFrame``: ``<feature>.label``,
+    ``<feature>.total``, and one ``<feature>.<label>`` count column per label."""
+    import pandas as pd
+
+    records = []
+    for result in self.count_batch(texts):
+      row = {'text': result['text']}
+      for feature, counted in result['features'].items():
+        row[f'{feature}.label'] = counted['label']
+        row[f'{feature}.total'] = counted['total']
+        for label, count in counted['counts'].items():
+          row[f'{feature}.{label}'] = count
+      records.append(row)
+    return pd.DataFrame.from_records(records)
+
+  def _count(self, text, tokens, lexicon):
+    entry_set = set(lexicon.lexicon.index)
+    selected = select_matches(tokens, entry_set, self.ngrams)
+    labels = lexicon.get_labels()
+
+    counts = {label: 0 for label in labels}
+    matches = []
+    for (entry, _ti, _tj, char_start, char_end) in selected:
+      max_value = lexicon.lexicon.loc[entry, 'max.value']
+      if max_value in counts:
+        counts[max_value] += 1
+      matches.append({
+          'entry': entry,
+          'span': [char_start, char_end],
+          'text': text[char_start:char_end],
+          'max_value': max_value,
+          'max_prop': float(lexicon.lexicon.loc[entry, 'max.prop']),
+      })
+
+    total = sum(counts.values())
+    proportions = {label: (counts[label] / total if total else 0.0) for label in labels}
+    label = max(counts, key=counts.get) if total else None
+    return {
+        'label': label,
+        'counts': counts,
+        'proportions': proportions,
+        'total': total,
+        'matches': matches,
+    }
+
   def _score(self, text, tokens, lexicon):
     entry_set = set(lexicon.lexicon.index)
     selected = select_matches(tokens, entry_set, self.ngrams)
