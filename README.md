@@ -144,10 +144,11 @@ frequent label), and `max.prop` (its proportion).
 
 ## Documentation
 
-Full documentation — guides plus an auto-generated API reference — is built with
-Sphinx from [`docs/`](docs/) and deployed to GitHub Pages by
+Full documentation — guides plus an auto-generated API reference — is published
+at **<https://suminpark.kr/kosac-lexicon/>** (built with Sphinx from
+[`docs/`](docs/) and deployed to GitHub Pages by
 [`.github/workflows/docs.yml`](.github/workflows/docs.yml) on every push to
-`main`. The user manual is also readable directly on GitHub:
+`main`). The user manual is also readable directly on GitHub:
 [English](docs/manual.md) · [한국어](docs/manual.ko.md).
 
 Build the site locally:

@@ -43,6 +43,7 @@ kosac = "kosac.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/suparklingmin/kosac-lexicon"
+Documentation = "https://suminpark.kr/kosac-lexicon/"
 Repository = "https://github.com/suparklingmin/kosac-lexicon"
 Issues = "https://github.com/suparklingmin/kosac-lexicon/issues"
 
