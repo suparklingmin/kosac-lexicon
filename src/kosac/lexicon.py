@@ -105,6 +105,10 @@ class SentimentLexicon:
     row['freq'] = counts.sum()
     row['max.value'] = counts.idxmax()
     row['max.prop'] = 0.
+    if len(self.lexicon.columns) == 0:
+      # First insert into an empty lexicon: establish the columns first.
+      self.lexicon = pd.DataFrame(columns=row.index)
+      self.lexicon.index.name = 'entry'
     self.lexicon.loc[morph] = row
 
   def add_token(self, morph, tag, verbose=True):

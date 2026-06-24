@@ -134,6 +134,11 @@ For each N-gram: `freq` (number of Seeds containing it), one column per label
 (relative frequency, converted to absolute counts on load), `max.value` (most
 frequent label), and `max.prop` (its proportion).
 
+## Documentation
+
+The full user manual (Korean) is at [`docs/manual.ko.md`](docs/manual.ko.md) —
+it covers every part of the API with examples.
+
 ## Examples
 
 See [`examples/quickstart.py`](examples/quickstart.py) for a runnable script and
