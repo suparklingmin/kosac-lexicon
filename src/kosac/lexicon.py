@@ -177,7 +177,8 @@ class SentimentLexicon:
     vectorized pass, so a 150k-sentence corpus builds in seconds rather than the
     minutes a per-token pandas update would take.
     """
-    corpus.df['entry'] = corpus.df['text'].astype('str').apply(lambda x: tokenizer.get_ngrams(x, self.ngrams))
+    texts = corpus.df['text'].astype('str').tolist()
+    corpus.df['entry'] = tokenizer.get_ngrams_batch(texts, self.ngrams)
     exploded = corpus.df[['entry', 'label']].explode('entry')
     pairs = ((entry, label) for entry, label in zip(exploded['entry'], exploded['label'])
              if isinstance(entry, str) and entry)

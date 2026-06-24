@@ -12,6 +12,15 @@ def test_kiwi_tokenize_emits_surface_pos():
     assert all("/" in token for token in tokens)
 
 
+def test_kiwi_tokenize_batch_matches_per_sentence():
+    tok = KiwiTokenizer()
+    sentences = ["이 영화 정말 최고였다", "시간 낭비 최악의 영화", "", "ㅋㅋㅋ 헐 대박"]
+    assert tok.tokenize_batch(sentences) == [tok.tokenize(s) for s in sentences]
+    # get_ngrams_batch is likewise equivalent to per-sentence get_ngrams.
+    assert (tok.get_ngrams_batch(sentences, [1, 2])
+            == [tok.get_ngrams(s, [1, 2]) for s in sentences])
+
+
 def test_kiwi_end_to_end_against_real_lexicon():
     tok = KiwiTokenizer()
     lex = kosac.load_lexicon("polarity", ngrams=[1, 2, 3])

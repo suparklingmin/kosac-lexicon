@@ -48,9 +48,9 @@ lex.get_size()        # ~104k entries from the full 150k-review train set
 ```
 
 ```{note}
-The build counts ~1.6M distinct N-grams over 150k reviews. Counting is
-vectorized, so the whole train set is a one- to two-minute job (tokenization
-dominates); the `min_freq` filter then trims it to the entries seen ≥ 5 times.
+The build counts ~1.6M distinct N-grams over 150k reviews. Tokenization runs in
+one Kiwi batch and counting is vectorized, so the whole train set builds in about
+15 seconds; the `min_freq` filter then trims it to the entries seen ≥ 5 times.
 ```
 
 ## Inspecting
