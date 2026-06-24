@@ -10,6 +10,18 @@ pip install "kosac-lexicon[sklearn]"       # + scikit-learn feature extractor
 pip install "kosac-lexicon[all]"           # everything
 ```
 
+````{note}
+During the beta the package is published to
+[TestPyPI](https://test.pypi.org/project/kosac-lexicon/), not the main PyPI yet.
+Until the 1.0 PyPI release, install from TestPyPI — the extra index pulls the
+dependencies (`pandas`, `numpy`, `kiwipiepy`) from the main PyPI:
+
+```bash
+pip install --index-url https://test.pypi.org/simple/ \
+  --extra-index-url https://pypi.org/simple/ "kosac-lexicon[kiwi]"
+```
+````
+
 The import name is `kosac`:
 
 ```python
