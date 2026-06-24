@@ -24,7 +24,7 @@ class SentimentLexicon:
       # the CSV's count columns (everything but `ngram`), enabling round-trips.
       if not self.labels:
         self.labels = [c for c in df.columns if c != 'ngram']
-      df['entry'] = df['ngram'].str.replace(';', ' ')
+      df['entry'] = df['ngram']
 
       # The CSV stores only absolute label counts; derive freq (= the number of
       # Seeds = the row total) and max.value / max.prop.
@@ -81,13 +81,13 @@ class SentimentLexicon:
   def save(self, filepath):
     """Write the lexicon to a CSV in the package's absolute-count format.
 
-    Columns are `ngram` (morphemes joined by `;`) and one absolute-count column
-    per label — the same format the loader reads. Reload it through the
+    Columns are `ngram` (morphemes joined by a space) and one absolute-count
+    column per label — the same format the loader reads. Reload it through the
     constructor: a concrete subclass uses its declared labels, while
     `GenericLexicon(filepath=...)` infers the labels from the columns.
     """
     out = self.lexicon[self.labels].astype(int).copy()
-    out.insert(0, 'ngram', out.index.str.replace(' ', ';'))
+    out.insert(0, 'ngram', out.index)
     out.to_csv(filepath, index=False)
     return filepath
 

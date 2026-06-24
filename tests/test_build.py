@@ -31,6 +31,19 @@ def test_save_reload_generic_infers_labels(tmp_path):
     assert int(reloaded.get_entry("좋/VA")["freq"]) == 2
 
 
+def test_save_reload_semicolon_surface_roundtrips(tmp_path):
+    # A morpheme whose surface is literally ';' (e.g. ;/SP from web text) must
+    # survive save/load now that entries are space-joined, not ';'-joined.
+    lex = GenericLexicon(ngrams=[1, 2])
+    lex.set_labels(["POS", "NEG"])
+    lex.update([(";/SP", "NEG"), (";/SP 좋/VA", "POS"), ("좋/VA", "POS")])
+    path = tmp_path / "semi.csv"
+    lex.save(str(path))
+
+    entries = set(GenericLexicon(filepath=str(path), ngrams=[1, 2]).get_lexicon().index)
+    assert ";/SP" in entries and ";/SP 좋/VA" in entries
+
+
 def test_build_lexicon_from_empty():
     lex = GenericLexicon(ngrams=[1])
     lex.set_labels(["POS", "NEG"])

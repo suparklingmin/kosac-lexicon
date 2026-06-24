@@ -152,14 +152,11 @@ your own from any labeled corpus.
 
 ## Saving
 
-`save()` writes the package's absolute-count CSV, which the constructor reads
-back. One caveat: the format joins morphemes with `;`, so entries whose surface
-is literally `;` (e.g. `;/SP`, which appears in raw web text) don't round-trip —
-drop them first:
+`save()` writes the package's absolute-count CSV (morphemes space-joined), which
+the constructor reads back — labels and all, including punctuation morphemes like
+`;/SP` whose surface is itself a separator-looking character:
 
 ```python
-clean = lex.get_lexicon()
-lex.lexicon = clean[~clean.index.str.contains(';', regex=False)]
 lex.save('nsmc_lexicon.csv')
 
 reloaded = GenericLexicon(filepath='nsmc_lexicon.csv', ngrams=[1, 2, 3])

@@ -101,10 +101,6 @@ def main():
   show_top(lex, 'POS')
   show_top(lex, 'NEG')
 
-  # The package's CSV format joins morphemes with ';', so entries whose surface
-  # is literally ';' (e.g. ';/SP') don't round-trip -- drop them before saving.
-  clean = lex.get_lexicon()
-  lex.lexicon = clean[~clean.index.str.contains(';', regex=False)]
   lex.save(args.out)
   print(f'\nsaved -> {args.out}  (reload with '
         f'GenericLexicon(filepath="{args.out}", ngrams={args.ngrams}))')

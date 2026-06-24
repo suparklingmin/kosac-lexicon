@@ -6,6 +6,21 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) on the
 package/API (the underlying lexicon data is fixed; its vintage is exposed as
 `kosac.__data_version__`).
 
+## [0.4.0] — 2026-06-25
+
+Fourth pre-release (beta). Space-joined data CSVs; `save()` round-trips
+punctuation morphemes.
+
+### Changed
+- Bundled data CSVs now join an N-gram's morphemes with a **space** (matching the
+  in-memory `entry` index) instead of `;`, so the loader and `save()` no longer
+  translate separators.
+
+### Fixed
+- `save()` now round-trips entries whose surface is itself `;` — e.g. the
+  punctuation morpheme `;/SP` common in web text (and in corpus-built lexicons
+  like the NSMC example). The old `;`-joined CSV format mangled them.
+
 ## [0.3.0] — 2026-06-25
 
 Third pre-release (beta). Faster corpus-built lexicons and an NSMC worked example.

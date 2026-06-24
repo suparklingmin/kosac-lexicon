@@ -5,7 +5,7 @@ Sentiment Analysis Corpus), packaged for Python. The import name is `kosac`; the
 distribution name is `kosac-lexicon`.
 
 ```{note}
-Pre-release (beta, 0.3.0). The API may change before the 1.0 release.
+Pre-release (beta, 0.4.0). The API may change before the 1.0 release.
 ```
 
 ```python
