@@ -27,6 +27,7 @@ tutorials/counting
 tutorials/machine-learning
 tutorials/negation-intensifier
 tutorials/custom-lexicon
+tutorials/nsmc-case-study
 ```
 
 ```{toctree}

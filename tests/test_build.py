@@ -1,3 +1,5 @@
+import pytest
+
 from kosac.corpora import Corpus
 from kosac.lexicon import GenericLexicon, PolarityLexicon
 from kosac.tokenizers import Tokenizer
@@ -98,3 +100,39 @@ def test_update_from_corpus_pos_tag_keeps_mixed_ngrams(tmp_path):
     assert "있/VV" in entries
     assert "ㄹ/ETM" not in entries            # pure function unigram dropped
     assert "ㄹ/ETM 수/NNB" not in entries     # no content token -> dropped
+
+
+def test_update_from_corpus_counts_and_derived_fields(tmp_path):
+    # 좋/VA seen twice POS, once NEG; 싫/VA once NEG.
+    corpus = _corpus(tmp_path, [("좋/VA", "POS"), ("좋/VA", "POS"),
+                                ("좋/VA", "NEG"), ("싫/VA", "NEG")])
+    lex = GenericLexicon(ngrams=[1])
+    lex.set_labels(["POS", "NEG"])
+    lex.update_from_corpus(corpus, Tokenizer())
+
+    row = lex.get_entry("좋/VA")
+    assert (int(row["POS"]), int(row["NEG"]), int(row["freq"])) == (2, 1, 3)
+    assert row["max.value"] == "POS"
+    assert row["max.prop"] == 2 / 3
+    assert int(row["ngram"]) == 1
+    # Column layout matches the incremental build path: ngram, freq, labels, ...
+    assert list(lex.get_lexicon().columns) == [
+        "ngram", "freq", "POS", "NEG", "max.value", "max.prop"]
+
+
+def test_update_from_corpus_rejects_unknown_labels(tmp_path):
+    # Corpus carries a label the lexicon doesn't declare -> fail loud.
+    corpus = _corpus(tmp_path, [("좋/VA", "POS"), ("싫/VA", "BAD")])
+    lex = GenericLexicon(ngrams=[1])
+    lex.set_labels(["POS", "NEG"])
+    with pytest.raises(ValueError, match="BAD"):
+        lex.update_from_corpus(corpus, Tokenizer())
+
+
+def test_update_from_corpus_empty_corpus_is_empty(tmp_path):
+    corpus = _corpus(tmp_path, [])
+    lex = GenericLexicon(ngrams=[1])
+    lex.set_labels(["POS", "NEG"])
+    lex.update_from_corpus(corpus, Tokenizer())
+    assert lex.get_size() == 0
+    assert lex.get_lexicon().index.name == "entry"
