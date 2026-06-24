@@ -33,8 +33,12 @@ dependencies = [
 [project.optional-dependencies]
 kiwi = ["kiwipiepy>=0.15"]
 transformers = ["transformers>=4.20"]
-all = ["kosac-lexicon[kiwi,transformers]"]
-dev = ["pytest>=7", "build", "twine", "kiwipiepy>=0.15"]
+sklearn = ["scikit-learn>=1.0"]
+all = ["kosac-lexicon[kiwi,transformers,sklearn]"]
+dev = ["pytest>=7", "build", "twine", "kiwipiepy>=0.15", "scikit-learn>=1.0"]
+
+[project.scripts]
+kosac = "kosac.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/suparklingmin/kosac-lexicon"

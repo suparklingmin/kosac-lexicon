@@ -16,6 +16,7 @@ derivation, in Korean).
 pip install kosac-lexicon                  # core: lexicon data + query API (pandas/numpy only)
 pip install "kosac-lexicon[kiwi]"          # + Kiwi POS tokenizer (pure pip, no Java needed)
 pip install "kosac-lexicon[transformers]"  # + HuggingFace subword tokenizer
+pip install "kosac-lexicon[sklearn]"       # + scikit-learn feature extractor
 pip install "kosac-lexicon[all]"           # everything
 ```
 
@@ -69,6 +70,53 @@ from kosac.lexicon import PolarityLexicon
 PolarityLexicon.load(ngrams=[1, 2])             # bundled data
 PolarityLexicon(filepath='my-lexicon.csv')      # custom file
 ```
+
+## High-level analysis
+
+`SentimentAnalyzer` bundles the lexicons with a tokenizer (Kiwi by default) and
+scores text in one call — optionally across all six features at once, with
+opt-in negation/intensifier handling:
+
+```python
+from kosac import SentimentAnalyzer
+
+analyzer = SentimentAnalyzer('all', negation=True, intensifier=True)
+result = analyzer.analyze('이 영화는 정말 좋았다')
+result['features']['polarity']['label']      # 'POS'
+result['features']['polarity']['matches']    # matched entries with character spans
+
+# negation is handled:
+neg = SentimentAnalyzer('polarity', negation=True)
+neg.analyze('이 영화는 안 좋다')['features']['polarity']['label']   # 'NEG'
+
+analyzer.analyze_frame(['좋다', '싫다'])       # tidy pandas DataFrame
+```
+
+`align=True` seeds Kiwi's user dictionary from the lexicon to reduce the tagset
+mismatch. Negation/intensifier are window-based heuristics and off by default.
+
+### Command line
+
+```bash
+kosac analyze "이 영화 정말 좋다" --features all --negation
+kosac features
+kosac citation
+printf '좋다\n싫다\n' | kosac analyze --compact
+```
+
+### scikit-learn
+
+```python
+from kosac.sklearn import KosacVectorizer          # pip install "kosac-lexicon[sklearn]"
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import make_pipeline
+
+clf = make_pipeline(KosacVectorizer('all'), LogisticRegression())
+clf.fit(train_texts, labels)
+```
+
+`kosac.citation()` returns BibTeX, and `kosac.describe_feature('polarity')`
+summarises a feature's label values.
 
 ## Sentiment features
 

@@ -31,9 +31,19 @@ Optional extras: `pip install -e ".[kiwi]"` (Kiwi POS tokenizer via `kiwipiepy` 
 - On load, per-label **relative** frequencies in the CSV become **absolute** counts (`label * freq`). `set_lexicon(min_freq, threshold)` filters `self.lexicon`; the unfiltered copy stays in `self.original_lexicon`.
 - Matching: `get_pattern()` builds a regex from entries sorted longest-N-gram / highest-`max.prop` first (via `utils.sort`); entries are `re.escape`d (some contain a regex-special `*`, e.g. `가*/JKS`). `match_patterns()` matches against a tokenized sentence; `get_sent_probs()` smooths counts, sums log-probs, applies `softmax`.
 
-### Loader API — the intended entry point
+### Loader API — the low-level entry point
 - `kosac.load_lexicon('polarity', ngrams=[1], min_freq=5)` (top-level factory; `kosac.FEATURES` lists valid names), or `PolarityLexicon.load(...)`. Both read bundled data via `src/kosac/_resources.py` (`importlib.resources.files('kosac.data')` + `as_file`).
 - The `__init__(filepath=..., ngrams=...)` constructor still works for explicit CSV paths; `.load()` is layered on top, so passing a path is unchanged.
+
+### High-level API (`analyzer.py`) — the recommended entry point
+- `kosac.SentimentAnalyzer(features, tokenizer=None, ngrams=..., negation=, intensifier=, align=)` bundles one/all feature lexicons + a tokenizer (default `KiwiTokenizer`). `analyze(text)` returns a JSON-able dict: per feature, `{label, prob, probs, matches}` where each match has `entry`, char `span`, `text`, `max_value`, `negated`, `weight`. `analyze_batch` / `analyze_frame` (pandas) for many texts.
+- `select_matches()` is a greedy leftmost-longest, non-overlapping token matcher (uses `tokenizer.tokenize_with_offsets`) — it replaces regex `match_patterns` for the analyzer and yields char offsets.
+- Negation/intensifier are opt-in window heuristics over token positions (`DEFAULT_NEGATIONS`/`DEFAULT_INTENSIFIERS`); negation only flips features whose labels include both POS and NEG. Aggregation is a per-entry weighted log-prob sum + softmax (equivalent to `get_sent_probs` when composition is off).
+
+### Tooling
+- `cli.py` (+`__main__.py`): `kosac` console script (`[project.scripts]`) — `analyze`/`features`/`citation`; `analyze` reads stdin when no text arg, `--compact` for JSONL.
+- `sklearn.py`: `KosacVectorizer` (BaseEstimator/TransformerMixin) → label-probability features; needs the `[sklearn]` extra (friendly ImportError otherwise). Not imported by `__init__`.
+- `info.py`: `citation()` (BibTeX) and `describe_feature()`/`FEATURE_VALUES` (label glossaries), re-exported from `kosac`.
 
 ### Other modules
 - `tokenizers.py`: `Tokenizer` base (whitespace) → `KiwiTokenizer` (Kiwi, the recommended POS tokenizer; emits `surface/POS`), plus `HuggingFaceTokenizer`. **Heavy deps (kiwipiepy/transformers) are imported lazily inside constructors** so `import kosac` works without them; absent extras raise a friendly `ImportError`. Keep it that way — do not add top-level `import kiwipiepy`/`transformers`. Kiwi's tagset is Sejong-based and aligns with the lexicon's tags, but some symbol/web tags differ. (`get_ngrams` uses the pure-Python `utils.ngrams`; no `nltk`.)

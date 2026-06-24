@@ -59,9 +59,13 @@ def load_lexicon(feature, ngrams=[1], min_freq=0, threshold=0.0):
 
 
 from .analyzer import SentimentAnalyzer  # noqa: E402  (after load_lexicon/FEATURES)
+from .info import FEATURE_VALUES, citation, describe_feature  # noqa: E402
 
 __all__ = [
     'SentimentAnalyzer',
+    'citation',
+    'describe_feature',
+    'FEATURE_VALUES',
     'SentimentLexicon',
     'PolarityLexicon',
     'IntensityLexicon',

@@ -15,6 +15,15 @@ First packaged release of the KOSAC morpheme-level Korean sentiment lexicon
 - Installable package `kosac-lexicon` with the six sentiment-feature lexicons
   bundled as package data and loaded via `kosac.load_lexicon(...)` /
   `<Lexicon>.load()` — no file paths required.
+- `SentimentAnalyzer`: bundles lexicons + a tokenizer and scores text in one
+  call, across one or all six features, returning the top label, full
+  distribution, and matched entries with character spans; `analyze_batch` /
+  `analyze_frame` (pandas) helpers.
+- Opt-in negation and intensifier composition, and `align=` to seed Kiwi's user
+  dictionary from the lexicon (`KiwiTokenizer.from_lexicon`).
+- `kosac` command-line interface (`analyze` / `features` / `citation`), a
+  scikit-learn `KosacVectorizer` (`[sklearn]` extra), and `kosac.citation()` /
+  `kosac.describe_feature()` helpers.
 - `pandas`/`numpy`-only core install; the Kiwi POS tokenizer (`kiwipiepy`, no
   Java required) and HuggingFace tokenizer are optional extras
   (`kosac-lexicon[kiwi]`, `[transformers]`). N-gram generation is pure-Python,
