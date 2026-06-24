@@ -17,15 +17,19 @@ class SentimentLexicon:
 
     if filepath:
       # keep_default_na=False so the literal 'None' label (a valid polarity /
-      # intensity value) is not parsed as a missing value.
+      # intensity value) stays a string, not a missing value.
       df = pd.read_csv(filepath, keep_default_na=False)
       df['entry'] = df['ngram'].str.replace(';', ' ')
 
-      # relative frequency -> absolute frequency
-      for label in self.labels:
-        df[label] = (df[label] * df['freq']).apply(round)
+      # The CSV stores only absolute label counts; derive freq (= the number of
+      # Seeds = the row total) and max.value / max.prop.
+      if self.labels:
+        counts = df[self.labels].astype(int)
+        df['freq'] = counts.sum(axis=1)
+        df['max.value'] = counts.idxmax(axis=1)
+        df['max.prop'] = counts.max(axis=1) / counts.sum(axis=1)
+        df = df.sort_values('max.prop', ascending=False)
 
-      df = df.sort_values('max.prop', ascending=False)
       df['ngram'] = df['entry'].str.count(' ') + 1
       df = df[df['ngram'].isin(self.ngrams)]
       df = df.sort_values('ngram', ascending=False)

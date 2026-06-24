@@ -137,10 +137,12 @@ summarises a feature's label values.
 | `subjectivity-polarity` | COMP, NEG, NEUT, POS |
 | `subjectivity-type` | Agreement, Argument, Emotion, Intention, Judgment, Others, Speculation |
 
-Each lexicon has 16,361 entries (3,476 unigrams, 6,579 bigrams, 6,307 trigrams).
-For each N-gram: `freq` (number of Seeds containing it), one column per label
-(relative frequency, converted to absolute counts on load), `max.value` (most
-frequent label), and `max.prop` (its proportion).
+Each lexicon has 16,362 entries (3,476 unigrams, 6,579 bigrams, 6,307 trigrams).
+The CSV stores one column per label with the **absolute count** of Seeds with
+that value. `freq` (number of Seeds = the row total), `max.value` (most frequent
+label), and `max.prop` (its proportion) are derived by the loader, not stored.
+(The original 2016 release stored relative frequencies; absolute count =
+`round(relative × freq)`.)
 
 ## Documentation
 

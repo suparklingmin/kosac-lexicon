@@ -141,8 +141,8 @@ lex.export_user_dict("user_dictionary.txt")   # one 'surface\tPOS' line per unig
 
 ## Saving and reloading
 
-The constructor's CSV loader expects *relative* frequencies (it multiplies them
-by `freq` on load), so the simplest lossless way to persist a built lexicon is to
+The constructor needs the label set at construction time, which a from-scratch
+`GenericLexicon` doesn't have, so the simplest lossless way to persist one is to
 pickle the object:
 
 ```python

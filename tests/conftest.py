@@ -3,11 +3,12 @@ import pytest
 from kosac.lexicon import PolarityLexicon
 
 # A tiny inline polarity lexicon used by the matching/inference tests.
-# Columns mirror the real CSVs; the '가*/JKS' row exercises regex-special chars.
-MINI_CSV = """ngram,freq,COMP,NEG,NEUT,None,POS,max.value,max.prop
-힘/NNG,10,0.0,0.7,0.1,0.0,0.2,NEG,0.7
-좋/VA,5,0.0,0.0,0.0,0.0,1.0,POS,1.0
-가*/JKS,3,0.0,0.0,0.0,0.0,1.0,POS,1.0
+# Columns mirror the real CSVs: ngram + absolute counts only; freq, max.value,
+# and max.prop are derived by the loader. The '가*/JKS' row exercises regex chars.
+MINI_CSV = """ngram,COMP,NEG,NEUT,None,POS
+힘/NNG,0,7,1,0,2
+좋/VA,0,0,0,0,5
+가*/JKS,0,0,0,0,3
 """
 
 

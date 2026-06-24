@@ -83,10 +83,9 @@ pip install "kosac-lexicon[all]"           # 전체
 사전은 `entry`(공백으로 이은 형태소)를 인덱스로 하는 pandas DataFrame이며 열은
 다음과 같습니다.
 
-- `freq`: 해당 N-그램을 포함하는 Seed의 개수
-- (라벨별 열): 로드 시 상대빈도 → 절대빈도(=비율×freq)로 변환됨
-- `max.value`: 가장 비율이 높은 라벨
-- `max.prop`: 그 비율 값
+- (라벨별 열): 각 라벨 값을 가지는 Seed의 **개수**(절대빈도) — CSV에 저장되는 유일한 데이터
+- `freq`: Seed 개수(= 행 합계). 로더가 계산
+- `max.value` / `max.prop`: 최빈 라벨과 그 비율. 로더가 카운트에서 계산
 
 ## 4. 빠른 시작
 

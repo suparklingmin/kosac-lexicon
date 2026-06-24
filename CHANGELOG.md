@@ -16,6 +16,14 @@ package/API (the underlying lexicon data is fixed; its vintage is exposed as
   mixed constructions like `ㄹ/ETM 수/NNB 있/VV`. Backward compatible (no
   arguments → unchanged).
 
+### Changed
+- Bundled data CSVs (`kosac/data/*.csv`) now store **only absolute integer
+  counts** (`ngram` + one column per label) instead of relative frequencies;
+  `freq`, `max.value`, and `max.prop` are no longer stored — the loader derives
+  them. This preserves tied top labels and makes the data mergeable/extensible.
+  The package API is unchanged — loaded values are identical (absolute count =
+  `round(relative × freq)` from the original 2016 release).
+
 ## [0.1.0] — 2026-06-24
 
 First pre-release (beta) of the KOSAC morpheme-level Korean sentiment lexicon

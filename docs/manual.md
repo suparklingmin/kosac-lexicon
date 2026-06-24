@@ -83,10 +83,11 @@ List them with `kosac.FEATURES`.
 
 A lexicon is a pandas DataFrame indexed by `entry` (space-joined morphemes), with:
 
-- `freq`: number of Seeds containing the N-gram
-- (per-label columns): converted to absolute counts (relative × freq) on load
-- `max.value`: the most frequent label
-- `max.prop`: its proportion
+- (per-label columns): the **absolute count** of Seeds with each label value —
+  the only data stored in the CSV
+- `freq`: number of Seeds (= the row total), derived by the loader
+- `max.value` / `max.prop`: the most frequent label and its proportion, derived
+  by the loader from the counts
 
 ## 4. Quick start
 

@@ -28,7 +28,7 @@ Optional extras: `pip install -e ".[kiwi]"` (Kiwi POS tokenizer via `kiwipiepy` 
 
 ### Core model (`src/kosac/lexicon.py`)
 - `SentimentLexicon` base class wraps a pandas DataFrame indexed by `entry` (space-joined morphemes). Six concrete subclasses (`PolarityLexicon`, `IntensityLexicon`, `ExpressiveTypeLexicon`, `NestedOrderLexicon`, `SubjectivityPolarityLexicon`, `SubjectivityTypeLexicon`) + `GenericLexicon`. **Subclasses differ only by two class attributes**: `labels` (must match the value-columns of the corresponding CSV) and `_feature` (the bundled-data key).
-- On load, per-label **relative** frequencies in the CSV become **absolute** counts (`label * freq`). **`pd.read_csv` uses `keep_default_na=False`** so the literal `None` label (a valid polarity/intensity value, 557 polarity entries) is not parsed as NaN. `set_lexicon(min_freq, threshold)` re-filters from `self.original_lexicon` (so it can loosen, not just tighten). Legacy aliases: `get`=`get_entry`, `match`=`match_patterns`.
+- The CSV stores **only absolute label counts** (integers); on load the loader derives `freq` (row sum), `max.value` (idxmax over `self.labels`), and `max.prop` (max/sum) — none are stored. `pd.read_csv` uses `keep_default_na=False` so the literal `None` label (a valid polarity/intensity value) stays a string. `set_lexicon(min_freq, threshold)` re-filters from `self.original_lexicon` (so it can loosen, not just tighten). Legacy aliases: `get`=`get_entry`, `match`=`match_patterns`.
 - Matching: `get_pattern()` builds a regex from entries sorted longest-N-gram / highest-`max.prop` first (via `utils.sort`); entries are `re.escape`d (some contain a regex-special `*`, e.g. `가*/JKS`). `match_patterns()` matches against a tokenized sentence; `get_sent_probs()` smooths counts, sums log-probs, applies `softmax`.
 
 ### Loader API — the low-level entry point
@@ -52,7 +52,7 @@ Optional extras: `pip install -e ".[kiwi]"` (Kiwi POS tokenizer via `kiwipiepy` 
 - `utils.py`: `add_one`/`smooth` (Laplace), `longer_first`/`sort` (match order), `softmax`.
 
 ### Data & layout
-- `src/kosac/data/*.csv` — the six lexicons (16,361 entries each: 3,476 unigrams / 6,579 bigrams / 6,307 trigrams), bundled into the wheel. Columns: `ngram` (morphemes joined by `;`), `freq`, one column per feature value, `max.value`, `max.prop`.
+- `src/kosac/data/*.csv` — the six lexicons (16,362 entries each: 3,476 unigrams / 6,579 bigrams / 6,307 trigrams), bundled into the wheel. Columns: `ngram` (morphemes joined by `;`) and one **absolute-count** column per feature value. `freq`, `max.value`, and `max.prop` are derived by the loader, not stored. The original 2016 release stored relative frequencies; absolute count = `round(relative × freq)`.
 - `tests/` — pytest suite; `conftest.py` provides a tiny inline-CSV `mini_lexicon` fixture (no Java) used by matching/inference tests. Bundled-data tests assert fixed counts (e.g. polarity unigrams == 3476).
 - `examples/` — `quickstart.py` (current API) + `README.md`. `docs/` — the user manual (`manual.md`, `manual.ko.md`). `data/example.csv` — a tiny demo corpus. None of these ship in the wheel (sdist includes only `src/kosac`, `tests`, and the top-level docs/licence files).
 - Old/heavy material that is not needed by the package — pre-package demo notebooks, the `draft.py`/legacy prototypes, the 23 MB source KOSAC corpus, the Komoran user dictionary, old PDFs/HTML — lives in a **gitignored `.archive/`** directory: present locally and in git history, but out of the repo and the package.
