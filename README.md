@@ -146,9 +146,7 @@ The full user manual covers every part of the API with examples:
 
 ## Examples
 
-See [`examples/quickstart.py`](examples/quickstart.py) for a runnable script and
-[`examples/`](examples/) for notebooks. The original 2024 prototypes live in
-[`examples/legacy/`](examples/legacy/).
+See [`examples/quickstart.py`](examples/quickstart.py) for a runnable script.
 
 ## License
 

@@ -23,3 +23,6 @@ env/
 # Editor / OS
 .DS_Store
 .ipynb_checkpoints/
+
+# Archived (hidden) material — kept locally, out of the repo and the package
+.archive/

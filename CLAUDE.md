@@ -54,8 +54,8 @@ Optional extras: `pip install -e ".[kiwi]"` (Kiwi POS tokenizer via `kiwipiepy` 
 ### Data & layout
 - `src/kosac/data/*.csv` — the six lexicons (16,361 entries each: 3,476 unigrams / 6,579 bigrams / 6,307 trigrams), bundled into the wheel. Columns: `ngram` (morphemes joined by `;`), `freq`, one column per feature value, `max.value`, `max.prop`.
 - `tests/` — pytest suite; `conftest.py` provides a tiny inline-CSV `mini_lexicon` fixture (no Java) used by matching/inference tests. Bundled-data tests assert fixed counts (e.g. polarity unigrams == 3476).
-- `examples/` — `quickstart.py` (current API) and the `kosac`-package demo notebooks. `examples/legacy/` — the original monolithic prototype `draft.py` and notebooks that `from utils import *`; historical, predate the package, won't run as-is.
-- `data/`, `tagger/`, `docs/` — source KOSAC corpus, exported user dict, and PDFs/HTML. Not part of the wheel.
+- `examples/` — `quickstart.py` (current API) + `README.md`. `docs/` — the user manual (`manual.md`, `manual.ko.md`). `data/example.csv` — a tiny demo corpus. None of these ship in the wheel (sdist includes only `src/kosac`, `tests`, and the top-level docs/licence files).
+- Old/heavy material that is not needed by the package — pre-package demo notebooks, the `draft.py`/legacy prototypes, the 23 MB source KOSAC corpus, the Komoran user dictionary, old PDFs/HTML — lives in a **gitignored `.archive/`** directory: present locally and in git history, but out of the repo and the package.
 
 ## Conventions & gotchas
 - Package source uses **2-space indentation** (inherited from the original); tests use 4-space. Match the file you're editing.
