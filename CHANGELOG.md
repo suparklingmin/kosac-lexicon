@@ -6,7 +6,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) on the
 package/API (the underlying lexicon data is fixed; its vintage is exposed as
 `kosac.__data_version__`).
 
-## [Unreleased]
+## [0.3.0] — 2026-06-25
+
+Third pre-release (beta). Faster corpus-built lexicons and an NSMC worked example.
 
 ### Added
 - `Tokenizer.tokenize_batch()` / `get_ngrams_batch()` tokenize many sentences at
