@@ -251,20 +251,20 @@ a.analyze("이 영화는 안 좋다")["features"]["polarity"]["label"]   # 'NEG'
   생성자 인자 `negations=`, `intensifiers=`로 교체할 수 있습니다.
 
 ```python
-from kosac.analyzer import DEFAULT_NEGATIONS
-SentimentAnalyzer("polarity", negation=True,
-                  negations=DEFAULT_NEGATIONS | {"별로/MAG"}, window=3)
+from kosac.analyzer import DEFAULT_INTENSIFIERS
+SentimentAnalyzer("polarity", intensifier=True,
+                  intensifiers=DEFAULT_INTENSIFIERS | {"완전/MAG"}, window=3)
 ```
 
 > ⚠️ 윈도 기반 휴리스틱이라 인접한 다른 형태소까지 부정으로 표시될 수 있습니다.
 > 최종 라벨에는 보통 영향이 없지만 정밀한 부정 범위 판정이 필요하면 `window`를
 > 조절하거나 직접 후처리하세요.
 
-### 6.4 빈도 계산 방식 (사회과학용)
+### 6.4 빈도 계산 방식
 
-많은 사회과학 연구는 확률 대신 **감정 단어의 빈도**(긍정/부정 단어 수와 점유율)로
-텍스트를 분류합니다. `count()`가 이 방식을 제공합니다 — 매칭된 형태소를 각자의
-대표 라벨(`max.value`)로 집계합니다.
+확률 대신 **감정 단어의 빈도**(긍정/부정 단어 수와 점유율)로 텍스트를 분류할 수
+있습니다 — 내용 분석·사회과학 연구에서 흔히 쓰는 방식입니다. `count()`가 이를
+제공하며, 매칭된 형태소를 각자의 대표 라벨(`max.value`)로 집계합니다.
 
 ```python
 a = SentimentAnalyzer("polarity")

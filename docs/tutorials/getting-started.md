@@ -73,6 +73,6 @@ SentimentAnalyzer("all").analyze("이 영화는 정말 좋았고 너무 행복�
 
 ## Next steps
 
-- [Counting sentiment words (social science)](social-science.md)
+- [Counting sentiment words](counting.md)
 - [Sentiment features for machine learning](machine-learning.md)
 - [Negation, intensifiers, and tuning](negation-intensifier.md)

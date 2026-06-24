@@ -103,7 +103,7 @@ entry
 
 Every morpheme of a `POS` sentence is counted as POS, so frequent function
 morphemes (e.g. `다/EF`, here in both sentences) end up mixed — the same noise
-discussed in the [social-science tutorial](social-science.md). Feed it many
+discussed in the [counting tutorial](counting.md). Feed it many
 examples so the signal dominates.
 
 ## Using your custom lexicon

@@ -1,8 +1,9 @@
-# Counting sentiment words (social science)
+# Counting sentiment words
 
-Many social-science studies classify text by **counting sentiment words** — the
-number and proportion of positive vs. negative words — rather than by a model's
-probability. `kosac` provides this with `count()`.
+Instead of a model's probability, you can classify text by **counting sentiment
+words** — the number and proportion of positive vs. negative words. `kosac`
+provides this word-counting (frequency) method via `count()`. It is the approach
+commonly used in content analysis and social-science studies.
 
 ## Per-document counts
 

@@ -51,7 +51,7 @@ vec.transform(train_texts).shape   # (6, 5)
 
 Each row is the per-label probability distribution from `analyze()` (the
 probability method, which handles function-morpheme noise — see the
-[social-science tutorial](social-science.md)).
+[counting tutorial](counting.md)).
 
 ## Tips for real data
 

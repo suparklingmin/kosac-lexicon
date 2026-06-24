@@ -23,7 +23,7 @@ analyzer.analyze("이 영화는 안 좋다")["features"]["polarity"]["label"]   
 :caption: Tutorials
 
 tutorials/getting-started
-tutorials/social-science
+tutorials/counting
 tutorials/machine-learning
 tutorials/negation-intensifier
 tutorials/custom-lexicon

@@ -94,7 +94,7 @@ neg.analyze('이 영화는 안 좋다')['features']['polarity']['label']   # 'NE
 
 analyzer.analyze_frame(['좋다', '싫다'])       # tidy pandas DataFrame
 
-# frequency-count method (counts of POS/NEG/... words), common in social science:
+# frequency-count method (counts of POS/NEG/... words):
 analyzer.count('빗물이 흐르고 눈물도 흐르고')['features']['polarity']['counts']
 ```
 

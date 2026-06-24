@@ -254,21 +254,21 @@ a.analyze("이 영화는 안 좋다")["features"]["polarity"]["label"]   # 'NEG'
   can be replaced via the `negations=` / `intensifiers=` constructor arguments.
 
 ```python
-from kosac.analyzer import DEFAULT_NEGATIONS
-SentimentAnalyzer("polarity", negation=True,
-                  negations=DEFAULT_NEGATIONS | {"별로/MAG"}, window=3)
+from kosac.analyzer import DEFAULT_INTENSIFIERS
+SentimentAnalyzer("polarity", intensifier=True,
+                  intensifiers=DEFAULT_INTENSIFIERS | {"완전/MAG"}, window=3)
 ```
 
 > ⚠️ This is a window-based heuristic, so an adjacent morpheme may occasionally
 > be flagged as negated. The final label is usually unaffected, but tune
 > `window` or post-process if you need precise negation scope.
 
-### 6.4 Frequency-count method (for social science)
+### 6.4 Frequency-count method
 
-Many social-science studies classify text by **counting sentiment words**
-(numbers and proportions of positive/negative words) rather than probabilities.
-`count()` provides this — it tallies matched morphemes by their dominant label
-(`max.value`).
+You can classify text by **counting sentiment words** (numbers and proportions of
+positive/negative words) instead of using probabilities — the approach common in
+content analysis and social-science studies. `count()` provides this: it tallies
+matched morphemes by their dominant label (`max.value`).
 
 ```python
 a = SentimentAnalyzer("polarity")

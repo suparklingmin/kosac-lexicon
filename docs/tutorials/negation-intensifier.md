@@ -27,7 +27,7 @@ expression, its POS↔NEG mass is swapped:
 | sentence | plain | `negation=True` |
 | --- | --- | --- |
 | `이 영화는 안 좋다` | POS (0.66) | **NEG (0.99)** |
-| `별로 좋지 않다` | POS (0.66) | **NEG (0.95)** |
+| `별로 안 좋다` | POS (0.59) | **NEG (0.84)** |
 
 Each affected match is flagged in the result:
 
@@ -72,20 +72,22 @@ analyzer.analyze("이 영화 정말 좋다")["features"]["polarity"]["label"]   
 
 ## Customising the markers
 
-Marker sets, the window size, and the boost factor are all configurable. The
-defaults are exported for reuse:
+The window size, boost factor, and marker sets are all configurable, and the
+defaults are exported for reuse. Korean negation is a small closed class
+(`안 / 못 / 않 / 말 / 아니`) already covered by `DEFAULT_NEGATIONS`; intensifiers
+are an open class, so adding colloquial ones is the common case:
 
 ```python
-from kosac.analyzer import DEFAULT_NEGATIONS
+from kosac.analyzer import DEFAULT_INTENSIFIERS
 
 custom = SentimentAnalyzer(
     "polarity",
-    negation=True,
-    negations=DEFAULT_NEGATIONS | {"별로/MAG"},   # treat 별로 as a negation marker
-    window=3,                                      # tokens to look around a match
+    intensifier=True,
+    intensifiers=DEFAULT_INTENSIFIERS | {"완전/MAG"},   # add 완전 ("totally")
+    window=3,                                            # tokens to look around a match
 )
-custom.analyze("이 결과는 별로 좋다")["features"]["polarity"]["label"]   # 'NEG' (0.82)
-# without the 별로 marker, the same sentence stays 'POS' (0.53)
+SentimentAnalyzer("polarity").analyze("이 영화 완전 좋다")["features"]["polarity"]["probs"]["POS"]   # 0.888
+custom.analyze("이 영화 완전 좋다")["features"]["polarity"]["probs"]["POS"]                          # 0.987
 ```
 
 ## ⚠️ Caveat
