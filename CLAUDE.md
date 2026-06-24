@@ -1,0 +1,53 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## What this is
+
+`kosac-lexicon` — a pip-installable Python package distributing a morpheme-level **Korean sentiment lexicon** derived from the KOSAC (Korean Sentiment Analysis Corpus). The lexicon (frozen 2016 data) maps Korean morpheme N-grams (`surface/POS`, Sejong tagset) to distributions over six independent semantic features. The six CSVs ship as package data; a zero-config loader exposes them without file paths or Java. See `README.md` (English) and `src/kosac/data/readme.txt` / `README.ko.md` (Korean) for the linguistic derivation.
+
+Distribution name is `kosac-lexicon`; **import name is `kosac`**.
+
+## Commands
+
+Everything runs from a venv with the package installed editable:
+
+```bash
+python3 -m venv .venv && .venv/bin/pip install -e ".[dev]"   # core + pytest/build/twine
+.venv/bin/pytest                      # full suite (fast, no Java required)
+.venv/bin/pytest tests/test_matching.py::test_wildcard_entry_is_escaped   # single test
+.venv/bin/python -m build             # build wheel + sdist into dist/
+.venv/bin/python -m twine check dist/*
+```
+
+Optional extras: `pip install -e ".[kiwi]"` (Kiwi POS tokenizer via `kiwipiepy` — pure pip, no Java) and `".[transformers]"` (HuggingFace tokenizer). The `dev` extra already includes `kiwipiepy`, so the Kiwi integration test in `tests/test_tokenizer_kiwi.py` runs; it `importorskip`s when Kiwi is absent.
+
+## Architecture
+
+`src/` layout — the package lives at `src/kosac/`, so `import kosac` requires an install (`pip install -e .`); this guarantees tests exercise the installed wheel and catch missing package-data.
+
+### Core model (`src/kosac/lexicon.py`)
+- `SentimentLexicon` base class wraps a pandas DataFrame indexed by `entry` (space-joined morphemes). Six concrete subclasses (`PolarityLexicon`, `IntensityLexicon`, `ExpressiveTypeLexicon`, `NestedOrderLexicon`, `SubjectivityPolarityLexicon`, `SubjectivityTypeLexicon`) + `GenericLexicon`. **Subclasses differ only by two class attributes**: `labels` (must match the value-columns of the corresponding CSV) and `_feature` (the bundled-data key).
+- On load, per-label **relative** frequencies in the CSV become **absolute** counts (`label * freq`). `set_lexicon(min_freq, threshold)` filters `self.lexicon`; the unfiltered copy stays in `self.original_lexicon`.
+- Matching: `get_pattern()` builds a regex from entries sorted longest-N-gram / highest-`max.prop` first (via `utils.sort`); entries are `re.escape`d (some contain a regex-special `*`, e.g. `가*/JKS`). `match_patterns()` matches against a tokenized sentence; `get_sent_probs()` smooths counts, sums log-probs, applies `softmax`.
+
+### Loader API — the intended entry point
+- `kosac.load_lexicon('polarity', ngrams=[1], min_freq=5)` (top-level factory; `kosac.FEATURES` lists valid names), or `PolarityLexicon.load(...)`. Both read bundled data via `src/kosac/_resources.py` (`importlib.resources.files('kosac.data')` + `as_file`).
+- The `__init__(filepath=..., ngrams=...)` constructor still works for explicit CSV paths; `.load()` is layered on top, so passing a path is unchanged.
+
+### Other modules
+- `tokenizers.py`: `Tokenizer` base (whitespace) → `KiwiTokenizer` (Kiwi, the recommended POS tokenizer; emits `surface/POS`), plus `HuggingFaceTokenizer`. **Heavy deps (kiwipiepy/transformers) are imported lazily inside constructors** so `import kosac` works without them; absent extras raise a friendly `ImportError`. Keep it that way — do not add top-level `import kiwipiepy`/`transformers`. Kiwi's tagset is Sejong-based and aligns with the lexicon's tags, but some symbol/web tags differ. (`get_ngrams` uses the pure-Python `utils.ngrams`; no `nltk`.)
+- `corpora.py`: `Corpus(filepath)` reads a headerless `text,label` CSV (used by `update_from_corpus`).
+- `utils.py`: `add_one`/`smooth` (Laplace), `longer_first`/`sort` (match order), `softmax`.
+
+### Data & layout
+- `src/kosac/data/*.csv` — the six lexicons (16,361 entries each: 3,476 unigrams / 6,579 bigrams / 6,307 trigrams), bundled into the wheel. Columns: `ngram` (morphemes joined by `;`), `freq`, one column per feature value, `max.value`, `max.prop`.
+- `tests/` — pytest suite; `conftest.py` provides a tiny inline-CSV `mini_lexicon` fixture (no Java) used by matching/inference tests. Bundled-data tests assert fixed counts (e.g. polarity unigrams == 3476).
+- `examples/` — `quickstart.py` (current API) and the `kosac`-package demo notebooks. `examples/legacy/` — the original monolithic prototype `draft.py` and notebooks that `from utils import *`; historical, predate the package, won't run as-is.
+- `data/`, `tagger/`, `docs/` — source KOSAC corpus, exported user dict, and PDFs/HTML. Not part of the wheel.
+
+## Conventions & gotchas
+- Package source uses **2-space indentation** (inherited from the original); tests use 4-space. Match the file you're editing.
+- **Dual licensing**: code is MIT (`LICENSE`); the lexicon data is CC BY-SA 4.0 (`src/kosac/data/LICENSE`), derived from KOSAC (SNU). Preserve both when redistributing, and keep `data/LICENSE` shipping inside the wheel.
+- Version policy: `kosac.__version__` is the SemVer package/API version; the data vintage is the separate `kosac.__data_version__` ("2016").
+- When adding a new feature/lexicon: add the CSV to `src/kosac/data/`, a subclass with `labels`+`_feature`, and an entry in both `_resources.FEATURE_FILES` and `__init__._REGISTRY`.

@@ -23,3 +23,8 @@ def softmax(x:np.array):
   x = x - x.max()
   return np.exp(x) / sum(np.exp(x))
 
+# Tokenization
+def ngrams(tokens, n):
+  """Yield the n-grams of `tokens` as tuples (pure-Python; no nltk needed)."""
+  return zip(*[tokens[i:] for i in range(n)])
+

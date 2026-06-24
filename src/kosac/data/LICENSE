@@ -1,0 +1,20 @@
+KOSAC Sentiment Lexicon — Data License
+======================================
+
+The CSV files in this directory (the "KOSAC sentiment lexicon") are licensed
+under the Creative Commons Attribution-ShareAlike 4.0 International License
+(CC BY-SA 4.0).
+
+SPDX-License-Identifier: CC-BY-SA-4.0
+Full legal text: https://creativecommons.org/licenses/by-sa/4.0/legalcode
+Human-readable summary: https://creativecommons.org/licenses/by-sa/4.0/
+
+Attribution
+-----------
+The lexicon is derived from the Korean Sentiment Analysis Corpus (KOSAC),
+developed at Seoul National University. The morpheme N-gram lexicon was
+constructed and released by Sumin Park (2016).
+
+When you redistribute or build upon this data you must:
+  - give appropriate credit to KOSAC and to the lexicon author, and
+  - distribute your contributions under the same CC BY-SA 4.0 license.

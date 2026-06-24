@@ -1,11 +1,19 @@
-import pandas as pd
 import re
 
-from .utils import *
+import numpy as np
+import pandas as pd
+
+from .utils import smooth, sort, softmax
+
 
 class SentimentLexicon:
+  labels = []      # overridden by concrete subclasses
+  _feature = None  # bundled-data key (see kosac/data/), set by subclasses
+
   def __init__(self, filepath=None, ngrams=[1]):
     self.ngrams = ngrams
+    self.min_freq = 0
+    self.threshold = 0.0
 
     if filepath:
       df = pd.read_csv(filepath)
@@ -14,7 +22,7 @@ class SentimentLexicon:
       # relative frequency -> absolute frequency
       for label in self.labels:
         df[label] = (df[label] * df['freq']).apply(round)
-      
+
       df = df.sort_values('max.prop', ascending=False)
       df['ngram'] = df['entry'].str.count(' ') + 1
       df = df[df['ngram'].isin(self.ngrams)]
@@ -24,20 +32,35 @@ class SentimentLexicon:
     else:
       df = pd.DataFrame()
       df.index.name = 'entry'
-      
+
     self.original_lexicon = df
     self.lexicon = self.original_lexicon.copy()
-  
+
+  @classmethod
+  def load(cls, ngrams=[1], min_freq=0, threshold=0.0):
+    """Load this feature's lexicon from the CSV bundled with the package."""
+    if cls._feature is None:
+      raise TypeError(
+          f'{cls.__name__} has no bundled data; use a concrete subclass such as '
+          'PolarityLexicon, or pass an explicit filepath to the constructor.'
+      )
+    from ._resources import resource_path
+    with resource_path(cls._feature) as path:
+      lexicon = cls(filepath=str(path), ngrams=ngrams)
+    if min_freq or threshold:
+      lexicon.set_lexicon(min_freq=min_freq, threshold=threshold)
+    return lexicon
+
   def __repr__(self):
     name = type(self).__name__
     return f'{name}(ngrams={self.ngrams}, min_freq={self.min_freq}, threshold={self.threshold})'
-  
+
   def __eq__(self, other):
     self.lexicon == other.lexicon
-  
+
   def __ne__(self, other):
     self.lexicon != other.lexicon
-  
+
   def __add__(self, other):
     raise NotImplementedError
 
@@ -50,19 +73,19 @@ class SentimentLexicon:
     self.lexicon = df[(df['freq'] >= min_freq) & (df['max.prop'] > threshold)]
     self.min_freq = min_freq
     self.threshold = threshold
-  
+
   def get_lexicon(self):
     return self.lexicon
 
   def get_size(self):
     return len(self.lexicon)
-  
+
   def get_labels(self):
     return self.labels
 
   def get_entry(self, morph):
     return self.lexicon.loc[morph]
-  
+
   def verify(self, morph, verbose=True):
     counts = self.lexicon.loc[morph, self.labels].astype('int')
     self.lexicon.loc[morph, 'freq'] = counts.sum()
@@ -77,7 +100,7 @@ class SentimentLexicon:
     row['freq'] = 0
     for label in self.labels:
       row[label] = 0
-    
+
     counts = row[self.labels]
     row['freq'] = counts.sum()
     row['max.value'] = counts.idxmax()
@@ -87,14 +110,14 @@ class SentimentLexicon:
   def add_token(self, morph, tag, verbose=True):
     if morph not in self.lexicon.index:
       self.initialize_entry(morph)
-    
+
     self.lexicon.loc[morph, tag] += 1
     self.verify(morph, verbose)
-  
+
   def update(self, examples):
     for (morph, tag) in examples:
       self.add_token(morph, tag, verbose=False)
-  
+
   def update_from_corpus(self, corpus, tokenizer):
     self.lexicon = self.original_lexicon.copy()
     self.lexicon['ngram'] = None
@@ -104,7 +127,7 @@ class SentimentLexicon:
     examples = [pair for (_, pair) in corpus.df[['entry', 'label']].explode('entry').iterrows()]
     self.update(examples)
 
-  def export_user_dict(self, dict_path='./tokenizer/user_dictionary.txt'):
+  def export_user_dict(self, dict_path='user_dictionary.txt'):
     unigrams = self.lexicon[self.lexicon['ngram'] == 1].index.tolist()
     with open(dict_path, 'w') as f:
       f.writelines('\n'.join(['\t'.join(unigram.split('/')) for unigram in unigrams]))
@@ -117,8 +140,10 @@ class SentimentLexicon:
       sorts = sort(my_lexicon)
     else:
       sorts = my_lexicon
-    
-    return re.compile('|'.join(sorts.index))
+
+    # Entries are matched literally: some contain regex-special characters
+    # (e.g. the wildcard '*' in '가*/JKS'), so each entry must be escaped.
+    return re.compile('|'.join(re.escape(entry) for entry in sorts.index))
 
   def match_patterns(self, sentence, tokenizer, sorting=True):
     pattern = self.get_pattern(sorting)
@@ -127,7 +152,7 @@ class SentimentLexicon:
     return matches
 
   def get_match_info(self, sentence, tokenizer, sorting=True):
-    matches = self.match(sentence, tokenizer, sorting)
+    matches = self.match_patterns(sentence, tokenizer, sorting)
     result = [(match, self.lexicon.loc[match, 'max.value'], self.lexicon.loc[match, 'max.prop']) for match in matches]
     return result
 
@@ -135,33 +160,40 @@ class SentimentLexicon:
     return self.lexicon.apply(smooth, labels=self.labels, axis=1)
 
   def get_sent_probs(self, sentence, tokenizer, smoothing=True):
-    matches = self.match(sentence, tokenizer)
+    matches = self.match_patterns(sentence, tokenizer)
     frequencies = self.lexicon.loc[matches].copy()
     if smoothing:
       smoothed = frequencies.apply(smooth, labels=self.labels, axis=1)
     else:
-      smoothed = frequencies
+      smoothed = frequencies[self.labels]
 
     return softmax(np.log(smoothed).sum()).sort_values(ascending=False)
 
+
 class PolarityLexicon(SentimentLexicon):
-  labels = ['COMP', 'NEG', 'NEUT', 'None', 'POS'] 
+  labels = ['COMP', 'NEG', 'NEUT', 'None', 'POS']
+  _feature = 'polarity'
 
 class IntensityLexicon(SentimentLexicon):
   labels = ['High', 'Low', 'Medium', 'None']
+  _feature = 'intensity'
 
 class ExpressiveTypeLexicon(SentimentLexicon):
   labels = ['dir-action', 'dir-explicit', 'dir-speech', 'indirect', 'writing-device']
+  _feature = 'expressive-type'
 
 class NestedOrderLexicon(SentimentLexicon):
   labels = ['0', '1', '2', '3']
+  _feature = 'nested-order'
 
 class SubjectivityPolarityLexicon(SentimentLexicon):
   labels = ['COMP', 'NEG', 'NEUT', 'POS']
+  _feature = 'subjectivity-polarity'
 
 class SubjectivityTypeLexicon(SentimentLexicon):
   labels = ['Agreement', 'Argument', 'Emotion', 'Intention', 'Judgment', 'Others', 'Speculation']
+  _feature = 'subjectivity-type'
 
 class GenericLexicon(SentimentLexicon):
-  def set_labels(self, labels:list):
+  def set_labels(self, labels: list):
     self.labels = labels
