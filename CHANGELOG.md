@@ -6,6 +6,22 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) on the
 package/API (the underlying lexicon data is fixed; its vintage is exposed as
 `kosac.__data_version__`).
 
+## [0.4.1] — 2026-06-25
+
+Fifth pre-release (beta). Fixes bundled-data loading on Python 3.9 and makes
+sentence scoring robust on out-of-vocabulary input.
+
+### Fixed
+- Loading bundled lexicons (`load_lexicon` / `Lexicon.load`) raised `TypeError`
+  on **Python 3.9** (a supported version): `kosac/data` ships no `__init__`, so
+  `importlib.resources.files('kosac.data')` hit a namespace package whose
+  `spec.origin` is `None`. The data is now resolved from the `kosac` package
+  (`files('kosac').joinpath('data', …)`), which loads on 3.9–3.12+.
+- `SentimentLexicon.get_sent_probs()` now returns a uniform distribution for a
+  sentence with no lexicon matches, instead of raising on the empty match frame.
+  An out-of-vocabulary sentence carries no evidence, so every label is equally
+  likely.
+
 ## [0.4.0] — 2026-06-25
 
 Fourth pre-release (beta). Space-joined data CSVs; `save()` round-trips
