@@ -29,3 +29,6 @@ env/
 
 # Archived (hidden) material — kept locally, out of the repo and the package
 .archive/
+
+# Local agent guidance — kept locally, out of the repo
+CLAUDE.md
