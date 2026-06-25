@@ -3,7 +3,7 @@
 A morpheme-level **Korean sentiment lexicon** derived from the Korean Sentiment
 Analysis Corpus (**KOSAC**), packaged for easy reuse in Python.
 
-> **Pre-release (beta, 0.4.0).** Under review by colleagues and beta users; the
+> **Pre-release (beta, 0.4.1).** Under review by colleagues and beta users; the
 > API may change before the 1.0 release.
 
 The lexicon maps Korean morpheme N-grams (`surface/POS`, Sejong tagset) to
@@ -172,7 +172,18 @@ sphinx-build -b html docs docs/_build/html   # output in docs/_build/html
 
 ## Examples
 
-See [`examples/quickstart.py`](examples/quickstart.py) for a runnable script.
+Runnable scripts in [`examples/`](examples/):
+
+- [`quickstart.py`](examples/quickstart.py) — end-to-end query + analysis with the
+  current API. Start here.
+- [`nsmc_lexicon.py`](examples/nsmc_lexicon.py) — build a **new** POS/NEG lexicon
+  from the NSMC movie-review corpus.
+- [`nikl_lexicon.py`](examples/nikl_lexicon.py) — build a **3-class**
+  POS/NEUT/NEG lexicon from scored expressions (e.g. a 모두의 말뭉치 / NIKL export).
+
+Worked case studies live in the docs:
+[NSMC](docs/tutorials/nsmc-case-study.md) ·
+[NIKL](docs/tutorials/nikl-lexicon.md).
 
 ## License
 
