@@ -261,6 +261,10 @@ class SentimentLexicon:
 
   def get_sent_probs(self, sentence, tokenizer, smoothing=True):
     matches = self.match_patterns(sentence, tokenizer)
+    if not matches:
+      # No lexicon entry matched: no evidence, so return a uniform distribution
+      # rather than feeding an empty frame to softmax.
+      return pd.Series(1 / len(self.labels), index=self.labels)
     frequencies = self.lexicon.loc[matches].copy()
     if smoothing:
       smoothed = frequencies.apply(smooth, labels=self.labels, axis=1)

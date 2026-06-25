@@ -28,6 +28,7 @@ tutorials/machine-learning
 tutorials/negation-intensifier
 tutorials/custom-lexicon
 tutorials/nsmc-case-study
+tutorials/nikl-lexicon
 ```
 
 ```{toctree}
