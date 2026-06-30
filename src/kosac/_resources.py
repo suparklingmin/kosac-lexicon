@@ -8,6 +8,8 @@ FEATURE_FILES = {
     'nested-order': 'nested-order.csv',
     'subjectivity-polarity': 'subjectivity-polarity.csv',
     'subjectivity-type': 'subjectivity-type.csv',
+    # Derived high-accuracy POS/NEG lexicon (gzipped; pandas reads .gz directly).
+    'polarity-blend': 'polarity-blend.csv.gz',
 }
 
 

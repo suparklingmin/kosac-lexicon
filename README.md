@@ -113,6 +113,26 @@ mismatch. Negation/intensifier are window-based heuristics and off by default.
 `count()` / `count_batch()` / `count_frame()` provide the word-count method
 instead of probabilities.
 
+### High-accuracy polarity
+
+For POS/NEG classification, the `polarity-blend` lexicon (frozen KOSAC seeds
+blended with an NSMC-learned lexicon) plus the default **multi-scale** scorer is
+far stronger out of domain than the frozen polarity lexicon:
+
+```python
+clf = SentimentAnalyzer('polarity-blend')        # multi-scale scoring by default
+clf.predict_polarity('이 영화 정말 재미있다')      # 'POS'
+clf.polarity_score('시간 낭비 최악의 영화')        # negative float (P(POS) − P(NEG))
+clf.predict_polarity_batch(reviews)
+```
+
+Multi-scale scoring sums every overlapping n-gram (so a trigram no longer
+suppresses its unigrams); pass `scoring='greedy'` for the legacy matcher. The
+blend is a derived lexicon (CC BY-SA; not one of the six canonical `FEATURES`);
+regenerate or build the larger variant with
+`python -m benchmarks.build_shipped_blend [--full]`. See `benchmarks/README.md`
+for the methodology and numbers.
+
 ### Command line
 
 ```bash

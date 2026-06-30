@@ -50,6 +50,28 @@ def select_matches(tokens, entry_set, ngram_lengths):
   return matches
 
 
+def select_matches_multiscale(tokens, entry_set, ngram_lengths):
+  """All (overlapping) n-gram windows present in ``entry_set``, every length.
+
+  Unlike :func:`select_matches` (greedy leftmost-longest, non-overlapping), this
+  yields *every* matching window, so a token contributes to its unigram and to any
+  longer n-grams it is part of. Summing these multi-scale matches (instead of
+  letting a long match suppress its unigrams) scores markedly better on held-out
+  sentiment classification, which is why it is the analyzer's default. Same return
+  shape as :func:`select_matches`.
+  """
+  lengths = sorted({n for n in ngram_lengths if n > 0})
+  n_tokens = len(tokens)
+  matches = []
+  for length in lengths:
+    for i in range(n_tokens - length + 1):
+      entry = (tokens[i][0] if length == 1
+               else ' '.join(tokens[k][0] for k in range(i, i + length)))
+      if entry in entry_set:
+        matches.append((entry, i, i + length - 1, tokens[i][1], tokens[i + length - 1][2]))
+  return matches
+
+
 class SentimentAnalyzer:
   """Score Korean text against one or more KOSAC feature lexicons.
 
@@ -65,12 +87,20 @@ class SentimentAnalyzer:
       Forwarded to the underlying lexicons.
   smoothing : bool
       Apply add-one smoothing before aggregating (matches ``get_sent_probs``).
+  scoring : {'multiscale', 'greedy'}
+      ``'multiscale'`` (default) sums every overlapping n-gram match, which scores
+      best on held-out sentiment classification; ``'greedy'`` is the legacy
+      leftmost-longest non-overlapping matcher. Affects ``analyze``/``polarity_score``
+      (``count`` always uses the non-overlapping matcher for word tallies).
+  ngram_weights : dict[int, float], optional
+      Per-length weights for multiscale matches (default 1.0 each).
   """
 
   def __init__(self, features='polarity', tokenizer=None, ngrams=DEFAULT_NGRAMS,
                min_freq=0, threshold=0.0, smoothing=True, align=False,
                negation=False, intensifier=False, window=2, intensifier_factor=2.0,
-               negations=None, intensifiers=None):
+               negations=None, intensifiers=None, scoring='multiscale',
+               ngram_weights=None):
     from . import load_lexicon, FEATURES
 
     if features == 'all':
@@ -84,6 +114,13 @@ class SentimentAnalyzer:
     self.intensifier = intensifier
     self.window = window
     self.intensifier_factor = intensifier_factor
+    if scoring not in ('multiscale', 'greedy'):
+      raise ValueError("scoring must be 'multiscale' or 'greedy'")
+    # 'multiscale' sums every overlapping n-gram (default, best classification);
+    # 'greedy' keeps the legacy leftmost-longest non-overlapping matcher.
+    self.scoring = scoring
+    # Optional per-length weights for multiscale matches (default 1.0 each).
+    self.ngram_weights = dict(ngram_weights or {})
     self.negations = DEFAULT_NEGATIONS if negations is None else frozenset(negations)
     self.intensifiers = DEFAULT_INTENSIFIERS if intensifiers is None else frozenset(intensifiers)
     self.lexicons = {
@@ -133,6 +170,36 @@ class SentimentAnalyzer:
         row[f'{feature}.prob'] = scored['prob']
       records.append(row)
     return pd.DataFrame.from_records(records)
+
+  def _polarity_feature(self):
+    """Name of a loaded feature whose labels include both POS and NEG."""
+    if 'polarity' in self.lexicons and \
+        {'POS', 'NEG'} <= set(self.lexicons['polarity'].get_labels()):
+      return 'polarity'
+    for name, lexicon in self.lexicons.items():
+      if {'POS', 'NEG'} <= set(lexicon.get_labels()):
+        return name
+    raise ValueError('no loaded feature has both POS and NEG labels; '
+                     'predict_polarity/polarity_score need a polarity-type feature')
+
+  def polarity_score(self, text):
+    """Continuous polarity in [-1, 1]: ``P(POS) - P(NEG)`` (higher = more POS).
+
+    The benchmark's decision axis — threshold it to get a binary label (see
+    :meth:`predict_polarity`). Uses the multiscale scorer by default.
+    """
+    feature = self._polarity_feature()
+    tokens = self.tokenizer.tokenize_with_offsets(str(text))
+    probs = self._score(text, tokens, self.lexicons[feature])['probs']
+    return probs.get('POS', 0.0) - probs.get('NEG', 0.0)
+
+  def predict_polarity(self, text, threshold=0.0):
+    """Binary polarity label: ``'POS'`` if :meth:`polarity_score` > ``threshold``."""
+    return 'POS' if self.polarity_score(text) > threshold else 'NEG'
+
+  def predict_polarity_batch(self, texts, threshold=0.0):
+    """:meth:`predict_polarity` over an iterable of texts."""
+    return [self.predict_polarity(text, threshold) for text in texts]
 
   def count(self, text):
     """Frequency-based analysis (the method common in social-science studies).
@@ -201,14 +268,17 @@ class SentimentAnalyzer:
 
   def _score(self, text, tokens, lexicon):
     entry_set = set(lexicon.lexicon.index)
-    selected = select_matches(tokens, entry_set, self.ngrams)
+    matcher = (select_matches_multiscale if self.scoring == 'multiscale'
+               else select_matches)
+    selected = matcher(tokens, entry_set, self.ngrams)
     labels = lexicon.get_labels()
     token_strs = [token for token, _start, _end in tokens]
     can_negate = self.negation and 'POS' in labels and 'NEG' in labels
 
     matches, weighted = [], []
     for (entry, ti, tj, char_start, char_end) in selected:
-      negate, weight = False, 1.0
+      negate = False
+      weight = self.ngram_weights.get(tj - ti + 1, 1.0)
       if can_negate or self.intensifier:
         ctx = self._context_tokens(token_strs, ti, tj)
         if can_negate and any(t in self.negations for t in ctx):

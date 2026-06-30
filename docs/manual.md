@@ -79,6 +79,11 @@ List them with `kosac.FEATURES`.
 
 `kosac.describe_feature("polarity")` summarises each label value ([§10](#10-utilities)).
 
+In addition to the six canonical features, v0.5.0 ships a derived
+**`polarity-blend`** lexicon (POS/NEG) tuned for classification accuracy —
+loadable by name but deliberately kept out of `kosac.FEATURES`. See
+[§6.5](#65-high-accuracy-polarity-multi-scale--polarity-blend).
+
 ### 3.3 Lexicon data structure
 
 A lexicon is a pandas DataFrame indexed by `entry` (space-joined morphemes), with:
@@ -184,17 +189,23 @@ call. **This is the recommended entry point.**
 from kosac import SentimentAnalyzer
 
 analyzer = SentimentAnalyzer(
-    features="polarity",     # also 'all' or ['polarity','intensity', ...]
+    features="polarity",     # also 'all', 'polarity-blend', or ['polarity', ...]
     tokenizer=None,          # default KiwiTokenizer()
     ngrams=(1, 2, 3),
     min_freq=0, threshold=0.0,
     smoothing=True,
+    scoring="multiscale",    # default; "greedy" for the legacy matcher (§6.5)
+    ngram_weights=None,      # optional per-length weights, e.g. {1:1, 2:1, 3:1}
     align=False,             # seed Kiwi's user dict from the lexicon (§7.3)
     negation=False,          # negation handling (§6.3)
     intensifier=False,       # intensifier handling (§6.3)
     window=2, intensifier_factor=2.0,
 )
 ```
+
+Since v0.5.0 the default scorer is **multi-scale** (§6.5): it sums every
+overlapping n-gram match. For unigram-only use (`ngrams=[1]`) it is identical to
+the legacy `scoring="greedy"`; it differs only when bigrams/trigrams match.
 
 ### 6.1 The `analyze(text)` result
 
@@ -288,6 +299,48 @@ a.count_frame(texts)   # per-document label counts (<feature>.POS, <feature>.NEG
 
 `analyze()` (probabilities) and `count()` (word counts) aggregate the same
 matches differently. Negation/intensifier do not apply to the count method.
+
+### 6.5 High-accuracy polarity (multi-scale + `polarity-blend`)
+
+For POS/NEG classification, two v0.5.0 additions make the analyzer much stronger,
+especially on out-of-domain text:
+
+**Multi-scale scoring** (the default). The legacy matcher was greedy
+leftmost-longest and non-overlapping, so a matched trigram *suppressed* its
+unigrams. Multi-scale instead sums **every overlapping n-gram** match, which
+strictly improves held-out sentiment classification. Use `scoring="greedy"` for
+the old behavior, or `ngram_weights` to weight the scales:
+
+```python
+SentimentAnalyzer("polarity", scoring="greedy")            # legacy matcher
+SentimentAnalyzer("polarity", ngram_weights={1: 1, 2: 1, 3: 1})  # equal (default)
+```
+
+`count()` always uses the non-overlapping matcher (correct for word tallies);
+multi-scale applies to `analyze()` / `polarity_score()`.
+
+**The `polarity-blend` lexicon.** The frozen `polarity` lexicon is near-chance out
+of domain. `polarity-blend` is a derived POS/NEG lexicon — the frozen KOSAC seeds
+blended with a lexicon learned from the NSMC corpus — that transfers far better
+(NIKL out-of-domain balanced-accuracy ≈ 0.53 → 0.73). It ships gzipped and is
+loadable by name, but is **not** one of the six canonical `kosac.FEATURES`, so
+`SentimentAnalyzer("all")` is unchanged.
+
+```python
+clf = SentimentAnalyzer("polarity-blend")     # multi-scale scoring by default
+clf.predict_polarity("이 영화 정말 재미있다")    # 'POS'
+clf.polarity_score("시간 낭비 최악의 영화")      # negative float: P(POS) − P(NEG)
+clf.predict_polarity_batch(reviews)           # list of 'POS'/'NEG'
+```
+
+- `polarity_score(text)` → continuous `P(POS) − P(NEG)` in `[-1, 1]`.
+- `predict_polarity(text, threshold=0.0)` → `'POS'` if the score exceeds the
+  threshold (raise it to trade recall for precision on imbalanced data).
+
+The blend is derived data (CC BY-SA; see [§12](#12-citation--license)). Regenerate
+it — or build the larger "champion" variant — with
+`python -m benchmarks.build_shipped_blend [--full]`; the full benchmark
+methodology and numbers live in `benchmarks/README.md`.
 
 ## 7. Tokenizers
 
@@ -404,3 +457,6 @@ print(kosac.citation())
 - **Lexicon data** (`kosac/data/*.csv`): CC BY-SA 4.0, derived from KOSAC (Seoul
   National University) (`src/kosac/data/LICENSE`). When redistributing, keep the
   attribution and share-alike terms.
+- **`polarity-blend`** (`kosac/data/polarity-blend.csv.gz`): derived data, CC
+  BY-SA 4.0 — it blends the CC BY-SA KOSAC seeds with the CC0 NSMC corpus, so the
+  result is CC BY-SA. See `src/kosac/data/polarity-blend.NOTICE`.

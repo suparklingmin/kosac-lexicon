@@ -6,6 +6,39 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) on the
 package/API (the underlying lexicon data is fixed; its vintage is exposed as
 `kosac.__data_version__`).
 
+## [0.5.0] — 2026-06-30
+
+Sixth pre-release (beta). A performance release for **polarity classification**,
+driven by the benchmark campaign in `benchmarks/` (NSMC in-domain + NIKL
+out-of-domain). The frozen 2016 KOSAC data is unchanged; the gains come from a
+better scorer and an optional derived lexicon.
+
+### Added
+- **Multi-scale scoring** (`SentimentAnalyzer(..., scoring='multiscale')`, now the
+  **default**): sums every overlapping n-gram match instead of the greedy
+  leftmost-longest non-overlapping matcher, so a long match no longer suppresses
+  its unigrams. Strictly beats the old scorer on all four held-out metrics. Pass
+  `scoring='greedy'` for the legacy behavior, or `ngram_weights={1:…,2:…,3:…}` to
+  weight the scales. `analyze()`/`polarity_score()` use it; `count()` stays
+  non-overlapping (correct for word tallies).
+- **`polarity-blend`** lexicon (`load_lexicon('polarity-blend')` /
+  `SentimentAnalyzer('polarity-blend')`): a derived POS/NEG lexicon — the frozen
+  KOSAC seeds blended with an NSMC-learned lexicon — shipped gzipped
+  (`data/polarity-blend.csv.gz`, ~0.9 MB). Far stronger than the frozen polarity
+  lexicon out of domain (NIKL balanced-acc 0.53 → 0.73). It is loadable by name
+  but is **not** one of the six canonical `FEATURES`, so `analyzer('all')` is
+  unchanged. Regenerate (or build the larger "champion" variant) with
+  `python -m benchmarks.build_shipped_blend [--full]`. Derived data is CC BY-SA
+  (see `data/polarity-blend.NOTICE`).
+- **Convenience API**: `SentimentAnalyzer.polarity_score(text)` (continuous
+  `P(POS) − P(NEG)`), `predict_polarity(text, threshold=0.0)`, and
+  `predict_polarity_batch(...)`.
+
+### Changed
+- Default analyzer scoring is now multi-scale (see above). For unigram-only use
+  (`ngrams=[1]`) this is identical to before; it differs only when bigrams/
+  trigrams are matched.
+
 ## [0.4.1] — 2026-06-25
 
 Fifth pre-release (beta). Fixes bundled-data loading on Python 3.9 and makes
