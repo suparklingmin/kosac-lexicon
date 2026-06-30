@@ -308,6 +308,18 @@ class SubjectivityTypeLexicon(SentimentLexicon):
   labels = ['Agreement', 'Argument', 'Emotion', 'Intention', 'Judgment', 'Others', 'Speculation']
   _feature = 'subjectivity-type'
 
+class PolarityBlendLexicon(SentimentLexicon):
+  """High-accuracy POS/NEG polarity lexicon: the frozen KOSAC seeds blended with
+  an NSMC-learned lexicon (see ``benchmarks/`` and ``build_shipped_blend.py``).
+
+  Unlike the frozen :class:`PolarityLexicon` (5 labels, near-chance out of domain),
+  this 2-label lexicon is tuned for classification and ships gzipped. Best used
+  with the analyzer's default multi-scale scorer. Derived data — CC BY-SA (mixes
+  CC BY-SA KOSAC with CC0 NSMC); see ``data/polarity-blend.NOTICE``.
+  """
+  labels = ['NEG', 'POS']
+  _feature = 'polarity-blend'
+
 class GenericLexicon(SentimentLexicon):
   """A lexicon with user-defined labels (see :meth:`set_labels`)."""
 

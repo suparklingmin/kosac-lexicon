@@ -78,6 +78,10 @@ pip install "kosac-lexicon[all]"           # 전체
 
 각 라벨 값의 의미 요약은 `kosac.describe_feature("polarity")`로 볼 수 있습니다([§10](#10-유틸리티)).
 
+6개 정식 특성 외에, v0.5.0은 분류 정확도를 위해 튜닝된 파생 **`polarity-blend`**
+사전(POS/NEG)을 함께 배포합니다 — 이름으로 로드되지만 `kosac.FEATURES`에는 일부러
+넣지 않았습니다. [§6.5](#65-고성능-극성-분류-멀티스케일--polarity-blend) 참고.
+
 ### 3.3 사전 데이터 구조
 
 사전은 `entry`(공백으로 이은 형태소)를 인덱스로 하는 pandas DataFrame이며 열은
@@ -183,17 +187,23 @@ GenericLexicon(filepath="my-lexicon.csv", ngrams=[1])   # 다시 로드(라벨 �
 from kosac import SentimentAnalyzer
 
 analyzer = SentimentAnalyzer(
-    features="polarity",     # 'all' 또는 ['polarity','intensity', ...] 도 가능
+    features="polarity",     # 'all', 'polarity-blend', ['polarity', ...] 도 가능
     tokenizer=None,          # 기본 KiwiTokenizer()
     ngrams=(1, 2, 3),
     min_freq=0, threshold=0.0,
     smoothing=True,
+    scoring="multiscale",    # 기본값; 'greedy'는 기존 매처 (§6.5)
+    ngram_weights=None,      # 길이별 가중치, 예: {1:1, 2:1, 3:1}
     align=False,             # Kiwi 사용자사전을 사전으로 시드 (§7.3)
     negation=False,          # 부정 처리 (§6.3)
     intensifier=False,       # 강조 처리 (§6.3)
     window=2, intensifier_factor=2.0,
 )
 ```
+
+v0.5.0부터 기본 스코어러는 **멀티스케일**입니다(§6.5): 중첩되는 모든 n-gram 매칭을
+합산합니다. 유니그램만 쓸 때(`ngrams=[1]`)는 기존 `scoring="greedy"`와 동일하며,
+바이그램·트라이그램이 매칭될 때만 달라집니다.
 
 ### 6.1 `analyze(text)` 반환 구조
 
@@ -282,6 +292,45 @@ a.count_frame(texts)   # 문서별 라벨 카운트 DataFrame (<특성>.POS, <�
 
 `analyze()`(확률 방식)와 `count()`(빈도 방식)는 동일한 매칭 결과를 다르게 집계합니다.
 부정·강조 옵션은 빈도 방식에는 적용되지 않습니다(단어 수 집계이므로).
+
+### 6.5 고성능 극성 분류 (멀티스케일 + `polarity-blend`)
+
+POS/NEG 분류에서는 v0.5.0의 두 가지 추가 기능이 — 특히 도메인 밖 텍스트에서 —
+분석기를 크게 강화합니다.
+
+**멀티스케일 스코어링**(기본값). 기존 매처는 greedy leftmost-longest 비중첩이라
+트라이그램이 매칭되면 그 자리의 유니그램이 **억제**됐습니다. 멀티스케일은 대신
+**중첩되는 모든 n-gram** 매칭을 합산해 분류 성능이 확실히 좋아집니다. 기존 방식은
+`scoring="greedy"`, 스케일별 가중치는 `ngram_weights`로 조정합니다.
+
+```python
+SentimentAnalyzer("polarity", scoring="greedy")            # 기존 매처
+SentimentAnalyzer("polarity", ngram_weights={1: 1, 2: 1, 3: 1})  # 균등(기본)
+```
+
+`count()`는 항상 비중첩 매처를 씁니다(단어 집계엔 그게 맞음). 멀티스케일은
+`analyze()` / `polarity_score()`에 적용됩니다.
+
+**`polarity-blend` 사전.** frozen `polarity` 사전은 도메인 밖에서 거의 찍기
+수준입니다. `polarity-blend`는 frozen KOSAC 시드에 NSMC 코퍼스 학습 사전을 섞은
+파생 POS/NEG 사전으로 전이가 훨씬 잘 됩니다(NIKL 도메인 밖 균형 정확도 ≈0.53 →
+0.73). gzip으로 배포되고 이름으로 로드되지만, 6개 정식 `kosac.FEATURES`에는 **포함되지
+않으므로** `SentimentAnalyzer("all")`은 그대로입니다.
+
+```python
+clf = SentimentAnalyzer("polarity-blend")     # 멀티스케일 기본
+clf.predict_polarity("이 영화 정말 재미있다")    # 'POS'
+clf.polarity_score("시간 낭비 최악의 영화")      # 음수 float: P(POS) − P(NEG)
+clf.predict_polarity_batch(reviews)           # ['POS'/'NEG', ...]
+```
+
+- `polarity_score(text)` → `[-1, 1]` 범위의 연속 점수 `P(POS) − P(NEG)`.
+- `predict_polarity(text, threshold=0.0)` → 점수가 임계값을 넘으면 `'POS'`
+  (불균형 데이터에서 임계값을 올리면 정밀도↔재현율 조정).
+
+블렌드는 파생 데이터(CC BY-SA; [§12](#12-인용라이선스))입니다. 재생성하거나 더 강한
+"챔피언" 버전을 만들려면 `python -m benchmarks.build_shipped_blend [--full]`,
+전체 벤치마크 방법론은 `benchmarks/README.md`를 참고하세요.
 
 ## 7. 토크나이저
 
@@ -395,3 +444,6 @@ print(kosac.citation())
 - **코드**: MIT (`LICENSE`)
 - **사전 데이터** (`kosac/data/*.csv`): CC BY-SA 4.0, KOSAC(서울대학교)에서 도출
   (`src/kosac/data/LICENSE`). 재배포 시 출처 표시와 동일조건 변경허락을 지켜 주세요.
+- **`polarity-blend`** (`kosac/data/polarity-blend.csv.gz`): 파생 데이터, CC BY-SA
+  4.0 — CC BY-SA인 KOSAC 시드와 CC0인 NSMC 코퍼스를 섞었으므로 결과물은 CC BY-SA
+  입니다. `src/kosac/data/polarity-blend.NOTICE` 참고.

@@ -16,13 +16,14 @@ from .lexicon import (
     GenericLexicon,
     IntensityLexicon,
     NestedOrderLexicon,
+    PolarityBlendLexicon,
     PolarityLexicon,
     SentimentLexicon,
     SubjectivityPolarityLexicon,
     SubjectivityTypeLexicon,
 )
 
-__version__ = '0.4.1'
+__version__ = '0.5.0'
 __data_version__ = '2016'
 
 _REGISTRY = {
@@ -34,8 +35,12 @@ _REGISTRY = {
     'subjectivity-type': SubjectivityTypeLexicon,
 }
 
-#: The sentiment features that ship with the package.
+#: The six canonical KOSAC sentiment features (the frozen 2016 data).
 FEATURES = tuple(_REGISTRY)
+
+# The derived high-accuracy POS/NEG lexicon is loadable by name but is NOT one of
+# the canonical KOSAC features, so it stays out of FEATURES (and ``analyzer('all')``).
+_REGISTRY['polarity-blend'] = PolarityBlendLexicon
 
 
 def load_lexicon(feature, ngrams=[1], min_freq=0, threshold=0.0):
@@ -73,6 +78,7 @@ __all__ = [
     'NestedOrderLexicon',
     'SubjectivityPolarityLexicon',
     'SubjectivityTypeLexicon',
+    'PolarityBlendLexicon',
     'GenericLexicon',
     'Corpus',
     'load_lexicon',

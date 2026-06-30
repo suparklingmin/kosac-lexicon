@@ -1,0 +1,17 @@
+polarity-blend.csv.gz — provenance & license
+=============================================
+
+A DERIVED high-accuracy POS/NEG polarity lexicon, not part of the frozen 2016
+KOSAC release. It is the union (entry-wise absolute-count sum) of:
+
+  1. the frozen KOSAC polarity seeds (POS/NEG columns), counts scaled ×20, and
+  2. a lexicon learned from the NSMC training split (Naver Sentiment Movie
+     Corpus, ratings_train.txt), keeping morpheme n-grams with frequency >= 5.
+
+Regenerate with:  python -m benchmarks.build_shipped_blend
+The stronger full version (frequency >= 2):  ... --full
+
+License: CC BY-SA 4.0. The KOSAC seeds are CC BY-SA 4.0 (see data/LICENSE); NSMC
+is CC0. Mixing CC BY-SA with CC0 yields a CC BY-SA work, so this derived file —
+and anything redistributing it — is CC BY-SA 4.0. Attribution: KOSAC (Seoul
+National University) and NSMC (Lucy Park, github.com/e9t/nsmc).
