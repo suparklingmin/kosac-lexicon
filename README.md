@@ -3,7 +3,7 @@
 A morpheme-level **Korean sentiment lexicon** derived from the Korean Sentiment
 Analysis Corpus (**KOSAC**), packaged for easy reuse in Python.
 
-> **Pre-release (beta, 0.4.1).** Under review by colleagues and beta users; the
+> **Pre-release (beta, 0.5.0).** Under review by colleagues and beta users; the
 > API may change before the 1.0 release.
 
 The lexicon maps Korean morpheme N-grams (`surface/POS`, Sejong tagset) to
@@ -211,5 +211,8 @@ Worked case studies live in the docs:
 - **Lexicon data** (`kosac/data/*.csv`) — Creative Commons Attribution-ShareAlike
   4.0 International (CC BY-SA 4.0), derived from KOSAC (Seoul National
   University). See [`src/kosac/data/LICENSE`](src/kosac/data/LICENSE).
+- **`polarity-blend`** (`kosac/data/polarity-blend.csv.gz`) — derived data, also
+  CC BY-SA 4.0 (it blends the CC BY-SA KOSAC seeds with the CC0 NSMC corpus). See
+  [`src/kosac/data/polarity-blend.NOTICE`](src/kosac/data/polarity-blend.NOTICE).
 
 If you use this lexicon in research, please cite KOSAC and this package.
